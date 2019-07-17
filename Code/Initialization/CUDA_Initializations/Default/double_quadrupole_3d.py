@@ -48,6 +48,7 @@ def get_preamble(scaling):
   int square_size = 9;
   x_center = 0.;
   y_center = 0.;
+  z_center = 0.;
   dcmplx half(.5, 0.);
   double separation = 0.;
   double px = 0.;

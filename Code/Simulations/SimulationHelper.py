@@ -15,7 +15,8 @@ import deepdish as dd
 import Tkinter as tk
 import tkMessageBox
 import shutil
-
+import getpass
+username = getpass.getuser()
 
 
 VERSION = "SimVersion_3.0"             
@@ -133,10 +134,10 @@ def set_lattice(Lx, Ly, Lz):
 
 
 
-def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False): 
+def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False, root_save_file = '/home/' + username + '/Desktop/Experiments'): 
   global global_vars
   first_time = False
-  global_vars["base_directory_name"] = ("Experiments" + "/" + BATCH + "/" + RUN + "/" )
+  global_vars["base_directory_name"] = (root_save_file + "/" + BATCH + "/" + RUN + "/" )
   base_directory_name = global_vars["base_directory_name"]
   continue_sim = ''
   im_dir = base_directory_name + "Images/" + VISUALIZATION

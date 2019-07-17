@@ -61,9 +61,10 @@ class visualizer:
 					name = d.split("/")[-1]
 				frame = cv2.imread(os.path.join(d, images[0]))
 				height, width, layers = frame.shape
+				save_name = self.get_animation_name(self.ani_dir , name)
 				print(self.ani_dir + name + "_animation.avi")
 				fourcc = cv2.VideoWriter_fourcc(*'XVID')
-				video = cv2.VideoWriter(self.ani_dir + name + "_animation.avi", fourcc, fps, (width,height))
+				video = cv2.VideoWriter(save_name, fourcc, fps, (width,height))
 				
 				for image in images:
 					print (os.path.join(d, image))
@@ -71,8 +72,9 @@ class visualizer:
 				cv2.destroyAllWindows()
 				video.release()
 
+	def get_animation_name(self, ani_dir, name):
+		if name == '':
+			return ani_dir + "animation.avi" 
+		else:
+			self.ani_dir + name + "_animation.avi"
 
-		# for idx, d in enumerate(dirs):
-		# 	wd = self.ani_dir + d
-		# 	os.system("ffmpeg -f image2 -r 5 -pattern_type glob -i '"+ wd +"*.png' -vcodec mpeg4 -y movie.mp4")
-		# #os.system("ffmpeg -r 1 -i *.png -vcodec mpeg4 -y movie.mp4")
