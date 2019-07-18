@@ -70,7 +70,7 @@ def ani(file_name = '', **kwargs):
 	sim.set_size(Lx, Ly, Lz, PARTICLES, DEVICES) 
 	sim.set_experiment(MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT, EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS)
 	sim.set_runtime(FRAME_SIZE, NUM_FRAMES)
-	sim.set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY = True, **kwargs)
+	sim.set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY = True, ANI_ONLY = True, **kwargs)
 	sim.animate(VISUALIZATION, **VIS_KWARGS)
 
 ### Not working yet

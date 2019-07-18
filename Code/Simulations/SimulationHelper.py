@@ -134,7 +134,7 @@ def set_lattice(Lx, Ly, Lz):
 
 
 
-def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False, root_save_file = '/home/' + username + '/Desktop/Experiments'): 
+def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False, ANI_ONLY = False, root_save_file = '/home/' + username + '/Desktop/Experiments'): 
   global global_vars
   first_time = False
   global_vars["base_directory_name"] = (root_save_file + "/" + BATCH + "/" + RUN + "/" )
@@ -150,9 +150,10 @@ def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False
     if len(data_files) == 0:
       first_time = True
   elif not OVERWRITE:
-    print("LOOK FOR DIALOGUE BOX")
-    print("You may be overwriting previous experiments")
-    continue_sim = give_overwrite_permission(base_directory_name)
+    if not ANI_ONLY:
+      print("LOOK FOR DIALOGUE BOX")
+      print("You may be overwriting previous experiments")
+      continue_sim = give_overwrite_permission(base_directory_name)
   if continue_sim == "yes" or OVERWRITE:
     if not (VIS_ONLY):
       shutil.rmtree(base_directory_name + "Data/")

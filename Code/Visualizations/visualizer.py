@@ -54,6 +54,7 @@ class visualizer:
 		name = ''
 		dirs = [x[0] for x in os.walk(self.image_dir)]
 		files = [x[2] for x in os.walk(self.image_dir)]
+		print (dirs, files)
 		for idx, d in enumerate(dirs):
 			if len(files[idx]) > 0:
 				images = sorted(files[idx])
