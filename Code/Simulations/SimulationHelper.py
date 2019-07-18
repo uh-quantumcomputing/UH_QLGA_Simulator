@@ -15,7 +15,8 @@ import deepdish as dd
 import Tkinter as tk
 import tkMessageBox
 import shutil
-
+import getpass
+username = getpass.getuser()
 
 
 VERSION = "SimVersion_3.0"             
@@ -133,10 +134,10 @@ def set_lattice(Lx, Ly, Lz):
 
 
 
-def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False): 
+def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False, ANI_ONLY = False, root_save_file = '/home/' + username + '/Desktop/Experiments'): 
   global global_vars
   first_time = False
-  global_vars["base_directory_name"] = ("Experiments" + "/" + BATCH + "/" + RUN + "/" )
+  global_vars["base_directory_name"] = (root_save_file + "/" + BATCH + "/" + RUN + "/" )
   base_directory_name = global_vars["base_directory_name"]
   continue_sim = ''
   im_dir = base_directory_name + "Images/" + VISUALIZATION
@@ -149,9 +150,10 @@ def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False
     if len(data_files) == 0:
       first_time = True
   elif not OVERWRITE:
-    print("LOOK FOR DIALOGUE BOX")
-    print("You may be overwriting previous experiments")
-    continue_sim = give_overwrite_permission(base_directory_name)
+    if not ANI_ONLY:
+      print("LOOK FOR DIALOGUE BOX")
+      print("You may be overwriting previous experiments")
+      continue_sim = give_overwrite_permission(base_directory_name)
   if continue_sim == "yes" or OVERWRITE:
     if not (VIS_ONLY):
       shutil.rmtree(base_directory_name + "Data/")
@@ -161,7 +163,7 @@ def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False
     if os.path.exists(ani_dir):
       shutil.rmtree(ani_dir)
   else:
-    if not first_time:
+    if not first_time and not ANI_ONLY:
       quit()
   dd.io.save(base_directory_name + 'meta_data.h5', global_vars)
   f= open(base_directory_name + "experiment_details.txt","w+")

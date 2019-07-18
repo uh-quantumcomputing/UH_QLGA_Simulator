@@ -54,6 +54,7 @@ class visualizer:
 		name = ''
 		dirs = [x[0] for x in os.walk(self.image_dir)]
 		files = [x[2] for x in os.walk(self.image_dir)]
+		print (dirs, files)
 		for idx, d in enumerate(dirs):
 			if len(files[idx]) > 0:
 				images = sorted(files[idx])
@@ -61,9 +62,10 @@ class visualizer:
 					name = d.split("/")[-1]
 				frame = cv2.imread(os.path.join(d, images[0]))
 				height, width, layers = frame.shape
-				print(self.ani_dir + name + "_animation.avi")
+				save_name = self.get_animation_name(self.ani_dir, name)
+				print(save_name)
 				fourcc = cv2.VideoWriter_fourcc(*'XVID')
-				video = cv2.VideoWriter(self.ani_dir + name + "_animation.avi", fourcc, fps, (width,height))
+				video = cv2.VideoWriter(save_name, fourcc, fps, (width,height))
 				
 				for image in images:
 					print (os.path.join(d, image))
@@ -71,8 +73,9 @@ class visualizer:
 				cv2.destroyAllWindows()
 				video.release()
 
+	def get_animation_name(self, ani_dir, name):
+		if name == '':
+			return ani_dir + "animation.avi" 
+		else:
+			return self.ani_dir + name + "_animation.avi"
 
-		# for idx, d in enumerate(dirs):
-		# 	wd = self.ani_dir + d
-		# 	os.system("ffmpeg -f image2 -r 5 -pattern_type glob -i '"+ wd +"*.png' -vcodec mpeg4 -y movie.mp4")
-		# #os.system("ffmpeg -r 1 -i *.png -vcodec mpeg4 -y movie.mp4")

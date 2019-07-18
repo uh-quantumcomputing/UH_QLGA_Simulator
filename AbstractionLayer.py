@@ -39,7 +39,7 @@ def run(**kwargs):
 	sim.init_GPU()
 	sim.simulate()
 	sim.visualize(VISUALIZATION, **VIS_KWARGS)
-	sim.animate(VISUALIZATION)
+	sim.animate(VISUALIZATION, **VIS_KWARGS)
 
 def run_no_vis(**kwargs):
 	sim.set_size(Lx, Ly, Lz, PARTICLES, DEVICES) 
@@ -56,7 +56,7 @@ def vis_ani(file_name = '', **kwargs):
 	sim.set_runtime(FRAME_SIZE, NUM_FRAMES)
 	sim.set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY = True, **kwargs)
 	sim.visualize(VISUALIZATION, **VIS_KWARGS)
-	sim.animate(VISUALIZATION)
+	sim.animate(VISUALIZATION, **VIS_KWARGS)
 
 def vis(file_name = '', **kwargs):
 	sim.set_size(Lx, Ly, Lz, PARTICLES, DEVICES) 
@@ -70,8 +70,8 @@ def ani(file_name = '', **kwargs):
 	sim.set_size(Lx, Ly, Lz, PARTICLES, DEVICES) 
 	sim.set_experiment(MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT, EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS)
 	sim.set_runtime(FRAME_SIZE, NUM_FRAMES)
-	sim.set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY = True, **kwargs)
-	sim.animate(VISUALIZATION)
+	sim.set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY = True, ANI_ONLY = True, **kwargs)
+	sim.animate(VISUALIZATION, **VIS_KWARGS)
 
 ### Not working yet
 def resume(file_name = '', **kwargs):
@@ -82,5 +82,5 @@ def resume(file_name = '', **kwargs):
 	sim.init_GPU()
 	sim.simulate()
 	sim.visualize(VISUALIZATION, **VIS_KWARGS)
-	sim.animate(VISUALIZATION)
+	sim.animate(VISUALIZATION, **VIS_KWARGS)
 

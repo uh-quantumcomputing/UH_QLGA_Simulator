@@ -16,7 +16,7 @@ def get_CUDA(dimensions, vectorSize, G0 = 1., G1 = 1., G2 = 1., MU = 1., scaling
 	    int z = blockIdx.z * blockDim.z + threadIdx.z;
 	    int n, j, nn;
 	    dcmplx k(1.,0.);
-	    dcmplx A(scaling.real()/double(xSize), 0.); 
+	    dcmplx A(scaling.real()/256., 0.); 
 	    dcmplx mu = Mul(mu2, Mul(k, k));
 	    dcmplx tau = Mul(A, A);
 	    dcmplx Nterm = 0.;
