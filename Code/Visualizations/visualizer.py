@@ -61,8 +61,8 @@ class visualizer:
 					name = d.split("/")[-1]
 				frame = cv2.imread(os.path.join(d, images[0]))
 				height, width, layers = frame.shape
-				save_name = self.get_animation_name(self.ani_dir , name)
-				print(self.ani_dir + name + "_animation.avi")
+				save_name = self.get_animation_name(self.ani_dir, name)
+				print(save_name)
 				fourcc = cv2.VideoWriter_fourcc(*'XVID')
 				video = cv2.VideoWriter(save_name, fourcc, fps, (width,height))
 				
@@ -76,5 +76,5 @@ class visualizer:
 		if name == '':
 			return ani_dir + "animation.avi" 
 		else:
-			self.ani_dir + name + "_animation.avi"
+			return self.ani_dir + name + "_animation.avi"
 

@@ -84,9 +84,9 @@ QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz,
 			VISUALIZATION, VIS_KWARGS, MEASUREMENT, MEASUREMENT_KWARGS)
 
 ################################# EXPERIMENT  ########################################
-QLGA.run()
+# QLGA.run()
 # QLGA.run_no_vis()
 # QLGA.vis()
 # QLGA.ani()
-# QLGA.vis_ani()
+QLGA.vis_ani()
 # QLGA.resume()
