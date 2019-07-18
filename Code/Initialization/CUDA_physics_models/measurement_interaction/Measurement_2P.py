@@ -1,4 +1,4 @@
-def get_CUDA(dimensions, vectorSize, timestep = 1, position = 0, width = 1., func = "1./cosh", smooth = False, Measured = True):
+def get_CUDA(dimensions, vectorSize, timestep = 1, position = 0, width = 1., func = "1./cosh", smooth = False, Measured = True, **kwargs):
 	potentialString = """dcmplx potentialU = 0.;
 	  if ( ((alpha/2)<=(x_measured+delta_x) && (alpha/2)>=(x_measured-delta_x)) || ((beta/2)<=(x_measured+delta_x) && (beta/2)>=(x_measured-delta_x))){
 	    potentialU = 1.;
