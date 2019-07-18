@@ -17,11 +17,15 @@ Lx = 256 # Parameter to scale lattice size along x
 Ly = 256 # Parameter to scale lattice size along y
 Lz = 256 # Parameter to scale lattice size along z
 
+
 BATCH = 'z_dir_test'
 RUN ='run2'
 
 
+
+
 DEVICES = [0,1] # References to devices to use
+
 
 ######################################################################################
 ########################## SIMULATION PARAMS END #####################################
@@ -55,8 +59,10 @@ EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solutio
 ###########################  EXTERNAL POTENTIAL #####################################
 
 
-POTENTIAL = "No_Potential"
-POTENTIAL_KWARGS = {}
+# POTENTIAL = "No_Potential"
+# POTENTIAL_KWARGS = {}
+POTENTIAL = "External_Function"
+POTENTIAL_KWARGS = {"func_string" : "((pi/10.)/(Lx*Lx))*((X1-Lx/2.)*(X1-Lx/2.)+(X2-Lx/2.)*(X2-Lx/2.))"} # Put cuda style function in string format, parameters 1P:(X,Y,Z,Y,Lx,Ly,Lz), 2P:(X1,Y1,Z1,X2,Y2,Z2,Lx,Ly,Lz)
 
 ###########################  MEASUREMENT #####################################
 
