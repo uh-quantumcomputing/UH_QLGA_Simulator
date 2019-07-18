@@ -7,24 +7,24 @@ import AbstractionLayer as QLGA
 
 #### LATTICE INFO ####
 # For particles >=2, (x,y,z) represents indices of number basis kets along each direction, ie. if xDim=L then XBLOCK*XGRID = L(2*L-1)
-PARTICLES = 1
+PARTICLES = 2
 KINETIC_OPERATOR = 'S'   # S for schroedinger equation, D for dirac ... 
-FRAME_SIZE = 10
-NUM_FRAMES = 10
+FRAME_SIZE = 1
+NUM_FRAMES = 1
 
 
-Lx = 256 # Parameter to scale lattice size along x
-Ly = 256 # Parameter to scale lattice size along y
-Lz = 256 # Parameter to scale lattice size along z
+Lx = 128 # Parameter to scale lattice size along x
+Ly = 128 # Parameter to scale lattice size along y
+Lz = 1 # Parameter to scale lattice size along z
 
 
-BATCH = 'z_dir_test'
-RUN ='run2'
+BATCH = '2p_test'
+RUN ='max_size_1D'
 
 
 
 
-DEVICES = [0,1] # References to devices to use
+DEVICES = [1,2,3,4] # References to devices to use
 
 
 ######################################################################################
@@ -35,16 +35,17 @@ DEVICES = [0,1] # References to devices to use
 ############################# INITIAL CONDITIONS #####################################
 
 
-#INIT = "entangled_gaussian_2P_1D"
-INIT = 'double_quadrupole_3d'
+INIT = "entangled_gaussian_2P_1D"
+# INIT = 'double_quadrupole_3d'
 #INIT = 'double_quadrupole'
 #INIT = 'pade_quadrupole'
 
 
 ############################ SIMULATION PHYSICS MODEL ################################
 
-MODEL = 'spin2_BEC'
-#MODEL = "No_Self_Interaction"
+# MODEL = 'spin2_BEC'
+MODEL = "No_Self_Interaction"
+# MODEL = "Internal_Function"
 
 
 
@@ -52,17 +53,17 @@ MODEL = 'spin2_BEC'
 
 
 # EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 5, "orientation1" : "x"} 
-EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution2" : 2, "orientation2" : "x", "y_shift2" : 1./4.} 
-# EXP_KWARGS = {'sigma1': 0.1, 'sigma2': 0.1, 'shift1': 0.35, 'shift2': 0.65,'sigma3': 0.1, 'sigma4': 0.1, 'shift3': 0.35, 'shift4': 0.65}
+# EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution2" : 2, "orientation2" : "x", "y_shift2" : 1./4.} 
+EXP_KWARGS = {'sigma1': 0.05, 'sigma2': 0.05, 'shift1': 0.35, 'shift2': 0.65,'sigma3': 0.05, 'sigma4': 0.05, 'shift3': 0.35, 'shift4': 0.65, 'cond_list':["X1==X2","true"],'func_list':["0.","(pi/10.)*(1./abs(X1-X2))"]}
 
 
 ###########################  EXTERNAL POTENTIAL #####################################
 
 
-# POTENTIAL = "No_Potential"
-# POTENTIAL_KWARGS = {}
-POTENTIAL = "External_Function"
-POTENTIAL_KWARGS = {"func_string" : "((pi/10.)/(Lx*Lx))*((X1-Lx/2.)*(X1-Lx/2.)+(X2-Lx/2.)*(X2-Lx/2.))"} # Put cuda style function in string format, parameters 1P:(X,Y,Z,Y,Lx,Ly,Lz), 2P:(X1,Y1,Z1,X2,Y2,Z2,Lx,Ly,Lz)
+POTENTIAL = "No_Potential"
+POTENTIAL_KWARGS = {}
+# POTENTIAL = "External_Function"
+# POTENTIAL_KWARGS = {"cond_list":["true"],"func_list" : ["((pi/10.)/(Lx*Lx))*((X1-Lx/2.)*(X1-Lx/2.)+(X2-Lx/2.)*(X2-Lx/2.))"]} # Put cuda style function in string format, parameters 1P:(X,Y,Z,Y,Lx,Ly,Lz), 2P:(X1,Y1,Z1,X2,Y2,Z2,Lx,Ly,Lz)
 
 ###########################  MEASUREMENT #####################################
 
@@ -76,12 +77,12 @@ MEASUREMENT_KWARGS = {}
 
 ########################   VISUALIZATION TECHNIQUE #################################
 
-# VISUALIZATION = '1D_2P'
+VISUALIZATION = '1D_2P'
 # VISUALIZATION = 'mayavi_2d_surface'
-VISUALIZATION = 'mayavi_3d_isosurface' 
+# VISUALIZATION = 'mayavi_3d_isosurface' 
 
 
-VIS_KWARGS = {"fps":3}
+VIS_KWARGS = {"fps":6}
 
 #####################################SETUP#######################################
 # ALWAYS RUN THIS
@@ -91,8 +92,8 @@ QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz,
 
 ################################# EXPERIMENT  ########################################
 # QLGA.run()
-# QLGA.run_no_vis()
+QLGA.run_no_vis()
 # QLGA.vis()
-QLGA.ani()
+# QLGA.ani()
 # QLGA.vis_ani()
 # QLGA.resume()

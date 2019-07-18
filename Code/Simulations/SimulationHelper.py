@@ -231,11 +231,11 @@ def simulate(PRINTING_SUR = True):
 
 def visualize(technique, **kwargs):
   visualizer = vis.visualizer(technique, global_vars, **kwargs)  
-  visualizer.visualize()
+  visualizer.visualize(**kwargs)
 
 def animate(technique, **kwargs):
   visualizer = vis.visualizer(technique, global_vars, **kwargs)  
-  visualizer.animate()
+  visualizer.animate(**kwargs)
 ##############   Methods that make strings ########################################
 
 

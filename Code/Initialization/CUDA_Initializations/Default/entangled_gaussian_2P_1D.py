@@ -1,4 +1,4 @@
-def get_CUDA(vectorSize = 10, sigma1 = 0.1, sigma2 = 0.1, shift1 = 0.25, shift2 = 0.75, sigma3 = 0.1, sigma4 = 0.1, shift3 = 0.25, shift4 = 0.75, p1 = 0., p2 = 0., p3 = 0., p4 = 0.):
+def get_CUDA(vectorSize = 10, sigma1 = 0.1, sigma2 = 0.1, shift1 = 0.25, shift2 = 0.75, sigma3 = 0.1, sigma4 = 0.1, shift3 = 0.25, shift4 = 0.75, p1 = 0., p2 = 0., p3 = 0., p4 = 0., **kwargs):
   return r'''
     __device__ double gaussian(double x, double sigma, double shift){
         double arg = ((x-shift)/(sqrt(2.)*sigma));
