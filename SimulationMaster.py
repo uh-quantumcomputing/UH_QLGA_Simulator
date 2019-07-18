@@ -87,6 +87,6 @@ QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz,
 # QLGA.run()
 # QLGA.run_no_vis()
 # QLGA.vis()
-# QLGA.ani()
-QLGA.vis_ani()
+QLGA.ani()
+# QLGA.vis_ani()
 # QLGA.resume()

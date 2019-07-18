@@ -163,7 +163,7 @@ def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False
     if os.path.exists(ani_dir):
       shutil.rmtree(ani_dir)
   else:
-    if not first_time:
+    if not first_time and not ANI_ONLY:
       quit()
   dd.io.save(base_directory_name + 'meta_data.h5', global_vars)
   f= open(base_directory_name + "experiment_details.txt","w+")
