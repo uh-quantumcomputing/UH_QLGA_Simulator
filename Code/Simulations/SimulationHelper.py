@@ -90,7 +90,7 @@ def set_experiment(MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT, EXP_KW
   global global_vars
   global_vars["model"], global_vars["kinetic_operator"], global_vars["init"], global_vars["potential"], global_vars['measurement'] = MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT
   global_vars["exp_kwargs"], global_vars["potential_kwargs"], global_vars["measurement_kwargs"] = EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS
-  global_vars["vectorSize"] = modelSizes.sizes[MODEL]
+  global_vars["vectorSize"] = modelSizes.sizes[MODEL+ "_" + str(global_vars["particle_number"]) + "P"]
 
 def set_runtime(FRAME_SIZE, NUM_FRAMES, TIME_STEP = 0):
   global global_vars

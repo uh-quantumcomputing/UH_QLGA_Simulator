@@ -56,10 +56,10 @@ def psi_projected(x,psi):
 
 def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, **kwargs):
     global yMax
-    frame_number = int((frame.split("_")[1]).split(".")[0])
+    frame_number = (frame.split("_")[1]).split(".")[0]
     print "Plotting", frame_dir
     QuantumState = np.load(frame_dir)
-    fig = plt.figure(figsize = (15,9))
+    fig = plt.figure(figsize = (15,12))
     oldQuantumState = None
     oldQuantumState = QuantumState.copy()
     xSize = global_vars["Qx"]/2
@@ -92,7 +92,7 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     Lattice = np.zeros(3, dtype = np.int_)
     Lattice[0],  Lattice[1], Lattice[2]= xSize, ySize, zSize
     Time = np.zeros(1, dtype = np.float64)
-    Time[0] = frame_number
+    Time[0] = int(frame_number)
 
     gpuLattice = drv.to_device(Lattice)
     gpuTime = drv.to_device(Time)
@@ -118,10 +118,10 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     for l in xrange(xSize):
         RhoFieldProjected[l] = Rho_projected_real[l]/rho_total
 
-    if frame_number == 0:
+    if int(frame_number) == 0:
         yMax = np.amax(RhoFieldProjected.real)
 
-    time = frame_number
+    time = int(frame_number)
     # prob = np.sum(RhoFieldProjected.real)
     # probP = np.sum((QuantumState*QuantumState.conjugate()).real)
     time_text = plt.suptitle(r'$\tau = $' + str(time) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
@@ -148,7 +148,7 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
 
     if not os.path.exists(image_dir + '/'):
         os.makedirs(image_dir + '/')
-    fig.savefig(image_dir + '/Frame_' + str(frame_number) +".png")
+    fig.savefig(image_dir + '/Frame_' + frame_number +".png")
     plt.close(fig)
 
 

@@ -103,8 +103,8 @@ class gpuObject:
 
 	def removeFiles(self):
 		if self.deviceNum == 0:
-			os.remove('Code/Initialization/compiled_init_cuda_code.py')
-			# os.remove('Code/Initialization/compiled_model_cuda_code.py')	
+			# os.remove('Code/Initialization/compiled_init_cuda_code.py')
+			os.remove('Code/Initialization/compiled_model_cuda_code.py')	
 		os.remove('Code/Initialization/compiled_init_cuda_code_' + str(self.deviceNum) + '.py')
 		os.remove('Code/Initialization/compiled_init_cuda_code_' + str(self.deviceNum) + '.pyc')
 		os.remove('Code/Initialization/compiled_model_cuda_code_' + str(self.deviceNum) + '.py')
