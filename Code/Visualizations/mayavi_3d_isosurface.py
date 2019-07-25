@@ -22,7 +22,6 @@ mlab.options.offscreen = True
 ###### Constants and globals ######
 DTYPE = np.complex
 Lattice = np.zeros(4, dtype = np.int_)
-RhoField = None
 PhaseField = None
 xSize = None
 rhoMax = .5
@@ -34,36 +33,47 @@ getPlotDetails = gpuMagic.get_function("getPlotDetailsMayavi_three_d")
 
 
 ######## Functions ##########
-def setComponent(data_dir, mf, global_vars):
-	global RhoField, PhaseField, xSize
-	blockX, blockY, blockZ = global_vars["blockX"], global_vars["blockY"], global_vars["blockZ"]
-	gridX, gridY, gridZ = global_vars["gridX"] * global_vars["num_GPUs"], global_vars["gridY"], global_vars["gridZ"]
+# def setComponent(data_dir, mf, global_vars):
+# 	global RhoField, PhaseField, xSize
+# 	blockX, blockY, blockZ = global_vars["blockX"], global_vars["blockY"], global_vars["blockZ"]
+# 	gridX, gridY, gridZ = global_vars["gridX"] * global_vars["num_GPUs"], global_vars["gridY"], global_vars["gridZ"]
+# 	QuantumState = np.load(data_dir)
+# 	xSize, ySize, zSize = QuantumState.shape[0], QuantumState.shape[1], QuantumState.shape[2]
+# 	QuantumStateNew = QuantumState[:xSize/2, :ySize/2, :zSize/2, :].copy(order='C')
+# 	Lattice[0],  Lattice[1], Lattice[2], Lattice[3]= xSize, ySize, zSize, mf
+# 	RhoField =   np.zeros((xSize/2, ySize/2, zSize/2), dtype = DTYPE)
+# 	PhaseField =   np.zeros((xSize/2, ySize/2, zSize/2), dtype = np.float64)
+# 	gpuQuantumState = drv.to_device(QuantumStateNew)
+# 	gpuPhaseField = drv.to_device(PhaseField)
+# 	gpuRhoField = drv.to_device(RhoField)
+# 	gpuLattice = drv.to_device(Lattice)
+# 	getPlotDetails(gpuQuantumState, gpuRhoField, gpuPhaseField, gpuLattice, 
+#                 block=(blockX,blockY,blockZ), grid=(gridX/2,gridY/2, gridZ/2))
+# 	RhoField = drv.from_device(gpuRhoField, RhoField.shape, DTYPE)
+# 	PhaseField = drv.from_device(gpuPhaseField, PhaseField.shape, np.float64)
+# 	gpuQuantumState.free()
+# 	gpuPhaseField.free()
+# 	gpuRhoField.free()
+# 	gpuLattice.free()
+
+def set_rho(data_dir, mf, global_vars):
+	xSize, ySize, zSize, vectorSize = global_vars["xSize"], global_vars["ySize"], global_vars["zSize"], global_vars["vectorSize"]
 	QuantumState = np.load(data_dir)
-	xSize, ySize, zSize = QuantumState.shape[0], QuantumState.shape[1], QuantumState.shape[2]
-	Lattice[0],  Lattice[1], Lattice[2], Lattice[3]= xSize, ySize, zSize, mf
-	RhoField =   np.zeros((xSize, ySize, zSize), dtype = DTYPE)
-	PhaseField =   np.zeros((xSize, ySize, zSize), dtype = np.float64)
-	gpuQuantumState = drv.to_device(QuantumState)
-	gpuPhaseField = drv.to_device(PhaseField)
-	gpuRhoField = drv.to_device(RhoField)
-	gpuLattice = drv.to_device(Lattice)
-	getPlotDetails(gpuQuantumState, gpuRhoField, gpuPhaseField, gpuLattice, 
-                block=(blockX,blockY,blockZ), grid=(gridX,gridY, gridZ))
-	RhoField = drv.from_device(gpuRhoField, RhoField.shape, DTYPE)
-	PhaseField = drv.from_device(gpuPhaseField, PhaseField.shape, np.float64)
-	gpuQuantumState.free()
-	gpuPhaseField.free()
-	gpuRhoField.free()
-	gpuLattice.free()
+	QuantumStateNew = QuantumState[:xSize/2, :ySize/2, :zSize/2, :]
+	RhoField = QuantumStateNew[:, :, :, 2*mf] * QuantumStateNew[:, :, :, 2*mf].conjugate() + QuantumStateNew[:, :, :, 2*mf + 1] * QuantumStateNew[:, :, :, 2*mf + 1].conjugate()
+	return RhoField
+
+
 
 # ANIMATE THE FIGURE WITH MOVIEPY, WRITE AN ANIMATED GIF
 def plotComponent(data_dir, frame, image_dir, frames, mf, global_vars):
 	xSize, ySize, zSize = global_vars["xSize"], global_vars["ySize"], global_vars["zSize"]
-	setComponent(data_dir, mf, global_vars)
+	#setComponent(data_dir, mf, global_vars)
+	RhoField = set_rho(data_dir, mf, global_vars)
 	src = mlab.pipeline.scalar_field(RhoField.real)
 	mlab.clf() # clear the figure (to reset the colors)
 	src.update()
-	mlab.contour3d(RhoField.real, contours=3, transparent=True, extent = [0, xSize-1, 0, ySize-1, 0, zSize-1])
+	mlab.contour3d(RhoField.real, contours=[.5, .1], transparent=True, extent = [0, xSize/2, 0, ySize/2, 0, zSize/2])
 	if not os.path.exists(image_dir + 'mf_'+str(2-mf) + '/'):
 		os.makedirs(image_dir + 'mf_'+str(2-mf) + '/')
 	mlab.savefig(image_dir + 'mf_'+str(2-mf) + '/' + frame.split(".")[0] +".png", figure=mlab.gcf())
