@@ -53,8 +53,17 @@ def psi_projected(x,psi):
         val += psi[x,l]
     return val
 
+def calculateEntanglement(xSize,psi):
+    purity = 0.
+    for x1 in xrange(xSize):
+    	for x2 in xrange(xSize):
+    		for x3 in xrange(xSize):
+    			for x4 in xrange(xSize):
+        			purity += psi[x1,x2]*(psi[x3,x2].conjugate())*psi[x3,x4]*(psi[x1,x4].conjugate())
+    return 1-2.*purity
 
-def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, **kwargs):
+
+def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, save_density = False, save_entanglement = False, **kwargs):
     global yMax
     frame_number = (frame.split("_")[1]).split(".")[0]
     print "Plotting", frame_dir
@@ -121,10 +130,12 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     if int(frame_number) == 0:
         yMax = np.amax(RhoFieldProjected.real)
 
+
     time = int(frame_number)
+    entanglement = calculateEntanglement(xSize, QuantumField_x1_x2_real+1.j*QuantumField_x1_x2_imag)
     # prob = np.sum(RhoFieldProjected.real)
     # probP = np.sum((QuantumState*QuantumState.conjugate()).real)
-    time_text = plt.suptitle(r'$\tau = $' + str(time) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
+    time_text = plt.suptitle(r'$\tau = $' + str(time) + '    ' + r'$\mathcal{E} = $' + str(entanglement) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
     # full_text = plt.suptitle(r'$\tau = $' + str(time) + '    ' + r'$P_{f} = $' + str('{:1.15f}'.format(prob)) + '     ' + r'$P_{p} = $' + str('{:1.15f}'.format(probP)),fontsize=14,horizontalalignment='center',verticalalignment='top')
     gs = gridspec.GridSpec(1,1)
     ax = fig.add_subplot(gs[0,0], xlim=(0,xSize), xlabel=r'$x(\ell)$', ylim=(-0.0000001, 1.1*yMax), ylabel=r'${| \Psi |}^{2}$')
@@ -134,6 +145,25 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     xdata = np.arange(xSize)
     ax.plot(RhoFieldProjected.real,zorder=2)
 
+    if save_density:
+        rho_dir = frame_dir.split("Data")[0] + "Density"
+        if not os.path.exists(rho_dir+ '/'):
+            os.makedirs(rho_dir + '/')
+        print "Saving density to", rho_dir + '/Frame_' + frame_number +'.npy'
+        np.save(rho_dir + '/Frame_' + frame_number , RhoFieldProjected.real)
+
+	if save_entanglement:
+		ent_dir = frame_dir.split("Data")[0] + "Entanglement"
+		if not os.path.exists(ent_dir+ '/'):
+			os.makedirs(ent_dir + '/')
+		print "Saving entanglement to", ent_dir + '/entanglement.npy'
+		if time==0:
+			entanglementArray = np.asarray([[entanglement, time]])
+		else:
+			entArrayOld = np.load(ent_dir + '/entanglement.npy'  )
+			entArrayNew = np.asarray([entanglement, time])
+			entanglementArray =  np.append(entArrayOld, entArrayNew, axis=0)
+		np.save(ent_dir + '/entanglement'  , entanglementArray)
 
     #Free memory
     gpuLattice.free()
