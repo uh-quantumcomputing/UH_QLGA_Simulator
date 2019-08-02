@@ -165,6 +165,28 @@ __global__ void getRho_projected(double *QF_x1_x2_real, double *QF_x1_x2_imag, d
 
 }
 
+__global__ void calcPurity(double *QF_x1_x2_real, double *QF_x1_x2_imag, double *purity, int *lattice){
+  int xSize = lattice[0]; // x1 
+  int ySize = lattice[0]; // x2 
+  int zSize = lattice[4];
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  int z = blockIdx.z * blockDim.z + threadIdx.z;
+  int n = 0;
+  dcmplx i(0.,1.);
+  dcmplx purity_add(0.,0.);
+  for (int x3 = 0; x3<blockDim.x*gridDim.x; x3++){
+    for (int x4 = 0; x4<blockDim.y*gridDim.y; x4++){
+      purity_add += (QF_x1_x2_real[n+z*spinComps+y*spinComps*zSize+x*zSize*ySize*spinComps]+i*QF_x1_x2_imag[n+z*spinComps+y*spinComps*zSize+x*zSize*ySize*spinComps])*(QF_x1_x2_real[n+z*spinComps+y*spinComps*zSize+x3*zSize*ySize*spinComps]
+                    -i*QF_x1_x2_imag[n+z*spinComps+y*spinComps*zSize+x3*zSize*ySize*spinComps])*(QF_x1_x2_real[n+z*spinComps+x4*spinComps*zSize+x3*zSize*ySize*spinComps]
+                    +i*QF_x1_x2_imag[n+z*spinComps+x4*spinComps*zSize+x3*zSize*ySize*spinComps])*(QF_x1_x2_real[n+z*spinComps+x4*spinComps*zSize+x*zSize*ySize*spinComps]-i*QF_x1_x2_imag[n+z*spinComps+x4*spinComps*zSize+x*zSize*ySize*spinComps]);
+    }
+  }
+
+  atomicAdd(&purity[0], purity_add.real());
+
+}
+
 
 /////////////////////////////////////////////////////////
 /////////////*  Calculate analytic field  *//////////////

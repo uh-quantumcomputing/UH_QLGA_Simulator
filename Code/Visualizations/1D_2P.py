@@ -8,14 +8,18 @@ from mpl_toolkits.mplot3d import axes3d
 from matplotlib import cm
 import mpl_toolkits
 import mpl_toolkits.mplot3d
+import os
+os.environ['CUDA_DEVICE'] = str(1) #Set CUDA device, starting at 0
 import pycuda.autoinit
 import pycuda.driver as drv
 import VIS_GPU_1D_2P_SOURCE as gpuVis
+from scipy.integrate import simps
 
 gpuMagic = gpuVis.gpuSource
 get_QS = gpuMagic.get_function("getQS_x1_x2")
 get_Rho_projected = gpuMagic.get_function("getRho_projected")
 get_Analytic = gpuMagic.get_function("getAnalyticField")
+calcPurity = gpuMagic.get_function("calcPurity")
 
 #Set a datatype to use for arrays
 DTYPE = np.complex
@@ -29,6 +33,21 @@ matplotlib.rcParams['axes.labelsize'] = 15
 
 
 yMax = 0.
+
+def arrayFunc2D(array, x, y):
+    val = 0.
+    xHigh = np.ceil(x).astype(np.int32)
+    xLow = np.floor(x).astype(np.int32)
+    yHigh = np.ceil(y).astype(np.int32)
+    yLow = np.floor(y).astype(np.int32)
+    # xVal, yVal
+    return (1.-(xHigh-x))*array[xHigh]+(1.-(x-xLow))*array[xLow], (1.-(yHigh-y))*array[yHigh]+(1.-(y-yLow))*array[yLow]
+
+# arr = np.arange(16).reshape(4,4)
+# for idx in np.ndindex(4):
+#     for idy in np.ndindex(4):
+#         print(idx, arr[idx][idy])
+# quit()
 
 '''
 ------------------------------------------
@@ -52,16 +71,6 @@ def psi_projected(x,psi):
     for l in xrange(xSize):
         val += psi[x,l]
     return val
-
-def calculateEntanglement(xSize,psi):
-    purity = 0.
-    for x1 in xrange(xSize):
-    	for x2 in xrange(xSize):
-    		for x3 in xrange(xSize):
-    			for x4 in xrange(xSize):
-        			purity += psi[x1,x2]*(psi[x3,x2].conjugate())*psi[x3,x4]*(psi[x1,x4].conjugate())
-    return 1-2.*purity
-
 
 def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, save_density = False, save_entanglement = False, **kwargs):
     global yMax
@@ -102,7 +111,9 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     Lattice[0],  Lattice[1], Lattice[2]= xSize, ySize, zSize
     Time = np.zeros(1, dtype = np.float64)
     Time[0] = int(frame_number)
+    purity = np.zeros(1, dtype = np.float64)
 
+    gpuPurity = drv.to_device(purity)
     gpuLattice = drv.to_device(Lattice)
     gpuTime = drv.to_device(Time)
     gpuQField = drv.to_device(QuantumState)
@@ -113,6 +124,7 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     gpuAnalyticFieldImag = drv.to_device(AnalyticFieldImag)
     get_QS(gpuQField, gpuQF_x1_x2_real, gpuQF_x1_x2_imag, gpuLattice, block=(blockX,blockY,blockZ), grid=(gridX,gridY,gridZ))
     get_Rho_projected(gpuQF_x1_x2_real, gpuQF_x1_x2_imag, gpuRho_projected_real, gpuLattice, block=(blockX_x1_x2,blockY_x1_x2,blockZ_x1_x2), grid=(gridX_x1_x2,gridY_x1_x2,gridZ_x1_x2))
+    calcPurity(gpuQF_x1_x2_real, gpuQF_x1_x2_imag, gpuPurity, gpuLattice, block=(blockX_x1_x2,blockY_x1_x2,blockZ_x1_x2), grid=(gridX_x1_x2,gridY_x1_x2,gridZ_x1_x2))
     # get_Analytic(gpuAnalyticFieldReal, gpuAnalyticFieldImag, gpuAn, gpuBn, gpuAn2, gpuBn2, gpuLattice, gpuTime, block=(blockX,blockY,blockZ), grid=(gridX,gridY,gridZ))
     QuantumField_x1_x2_real = drv.from_device(gpuQF_x1_x2_real, QuantumField_x1_x2_real.shape, np.float64)
     QuantumField_x1_x2_imag = drv.from_device(gpuQF_x1_x2_imag, QuantumField_x1_x2_imag.shape, np.float64)
@@ -132,7 +144,8 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
 
 
     time = int(frame_number)
-    entanglement = calculateEntanglement(xSize, QuantumField_x1_x2_real+1.j*QuantumField_x1_x2_imag)
+    purity = drv.from_device(gpuPurity, purity.shape, np.float64)
+    entanglement = 1-2.*purity[0]/(rho_total*rho_total)
     # prob = np.sum(RhoFieldProjected.real)
     # probP = np.sum((QuantumState*QuantumState.conjugate()).real)
     time_text = plt.suptitle(r'$\tau = $' + str(time) + '    ' + r'$\mathcal{E} = $' + str(entanglement) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
@@ -173,6 +186,7 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     gpuRho_projected_real.free()
 
     gpuTime.free()
+    gpuPurity.free()
     gpuAnalyticFieldReal.free()
     gpuAnalyticFieldImag.free()
 
