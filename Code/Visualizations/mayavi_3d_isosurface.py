@@ -32,30 +32,18 @@ mf_levels = []
 gpuMagic = gpuVis.gpuSource
 getPlotDetails = gpuMagic.get_function("getPlotDetailsMayavi_three_d")
 
+def create_8bit_rgb_lut():
+    xl = np.mgrid[0:256, 0:256, 0:256]
+    lut = np.vstack((xl[0].reshape(1, 256**3),
+                        xl[1].reshape(1, 256**3),
+                        xl[2].reshape(1, 256**3),
+                        255 * np.ones((1, 256**3)))).T
+    return lut.astype('int32')
 
-######## Functions ##########
-# def setComponent(data_dir, mf, global_vars):
-# 	global RhoField, PhaseField, xSize
-# 	blockX, blockY, blockZ = global_vars["blockX"], global_vars["blockY"], global_vars["blockZ"]
-# 	gridX, gridY, gridZ = global_vars["gridX"] * global_vars["num_GPUs"], global_vars["gridY"], global_vars["gridZ"]
-# 	QuantumState = np.load(data_dir)
-# 	xSize, ySize, zSize = QuantumState.shape[0], QuantumState.shape[1], QuantumState.shape[2]
-# 	QuantumStateNew = QuantumState[:xSize/2, :ySize/2, :zSize/2, :].copy(order='C')
-# 	Lattice[0],  Lattice[1], Lattice[2], Lattice[3]= xSize, ySize, zSize, mf
-# 	RhoField =   np.zeros((xSize/2, ySize/2, zSize/2), dtype = DTYPE)
-# 	PhaseField =   np.zeros((xSize/2, ySize/2, zSize/2), dtype = np.float64)
-# 	gpuQuantumState = drv.to_device(QuantumStateNew)
-# 	gpuPhaseField = drv.to_device(PhaseField)
-# 	gpuRhoField = drv.to_device(RhoField)
-# 	gpuLattice = drv.to_device(Lattice)
-# 	getPlotDetails(gpuQuantumState, gpuRhoField, gpuPhaseField, gpuLattice, 
-#                 block=(blockX,blockY,blockZ), grid=(gridX/2,gridY/2, gridZ/2))
-# 	RhoField = drv.from_device(gpuRhoField, RhoField.shape, DTYPE)
-# 	PhaseField = drv.from_device(gpuPhaseField, PhaseField.shape, np.float64)
-# 	gpuQuantumState.free()
-# 	gpuPhaseField.free()
-# 	gpuRhoField.free()
-# 	gpuLattice.free()
+
+def rgb_2_scalar_idx(r, g, b):
+    return 256**2 *r + 256 * g + b
+
 
 def set_rho(data_dir, mf, global_vars):
 	xSize, ySize, zSize, vectorSize = global_vars["xSize"], global_vars["ySize"], global_vars["zSize"], global_vars["vectorSize"]
@@ -68,8 +56,8 @@ def set_rho(data_dir, mf, global_vars):
 def set_color_data(Q, global_vars):
 	xSize, ySize, zSize, vectorSize = global_vars["xSize"], global_vars["ySize"], global_vars["zSize"], global_vars["vectorSize"]
 	total_size = xSize*ySize*zSize/8
-	temp = np.arange(total_size, dtype = DTYPE)/total_size
-	return temp.reshape((xSize/2, ySize/2, zSize/2)) 
+	temp = 255*(256**2)*np.ones(total_size, dtype = DTYPE)
+	return temp.reshape((xSize/2, ySize/2, zSize/2)).astype('int32') 
 
 # ANIMATE THE FIGURE WITH MOVIEPY, WRITE AN ANIMATED GIF
 def plotComponent(data_dir, frame, image_dir, frames, mf, global_vars):
@@ -77,7 +65,7 @@ def plotComponent(data_dir, frame, image_dir, frames, mf, global_vars):
 	#setComponent(data_dir, mf, global_vars)
 	RhoField, color_field = set_rho(data_dir, mf, global_vars)
 	src = mlab.pipeline.scalar_field(RhoField.real)   #The 3D whose isosurface we want to compute
-	c= src.image_data.point_data.add_array((color_field.real).T.ravel()) 
+	c = src.image_data.point_data.add_array((color_field.real).T.ravel()) 
 	src.image_data.point_data.get_array(c).name = 'angle'
 	mlab.clf() # clear the figure (to reset the colors) 
 	src.update()                # thecustomized colormap
@@ -85,14 +73,11 @@ def plotComponent(data_dir, frame, image_dir, frames, mf, global_vars):
 	contour = mlab.pipeline.contour(src2)
 	contour2 = mlab.pipeline.set_active_attribute(contour,point_scalars='angle') #few more
 	surf = mlab.pipeline.surface(contour2, colormap='hsv',vmin= 0., vmax = 2.) #display the surface
-	print surf.module_manager.scalar_lut_manager.lut.number_of_colors
-	surf.module_manager.scalar_lut_manager.lut.number_of_colors = 1000
-	print surf.module_manager.scalar_lut_manager.lut.number_of_colors
-	lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
-	print lut.shape
-	lut[:, -1] = np.linspace(0, 255, 256)
-	lut2 = .5*np.ones((256*256*256, 4))
-	surf.module_manager.scalar_lut_manager.lut.table = lut
+	rgb_lut = create_8bit_rgb_lut()
+	surf.module_manager.scalar_lut_manager.lut._vtk_obj.SetTableRange(0, rgb_lut.shape[0])
+	surf.module_manager.scalar_lut_manager.lut.number_of_colors = rgb_lut.shape[0]
+	surf.module_manager.scalar_lut_manager.lut.number_of_colors
+	surf.module_manager.scalar_lut_manager.lut.table = rgb_lut
 	mlab.view()
 	if not os.path.exists(image_dir + 'mf_'+str(2-mf) + '/'):
 		os.makedirs(image_dir + 'mf_'+str(2-mf) + '/')
