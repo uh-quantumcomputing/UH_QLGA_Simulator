@@ -7,24 +7,24 @@ import AbstractionLayer as QLGA
 
 #### LATTICE INFO ####
 # For particles >=2, (x,y,z) represents indices of number basis kets along each direction, ie. if xDim=L then XBLOCK*XGRID = L(2*L-1)
-PARTICLES = 2
+PARTICLES = 1
 KINETIC_OPERATOR = 'S'   # S for Schroedinger equation, D for Dirac ... 
-FRAME_SIZE = 25
-NUM_FRAMES = 40
+FRAME_SIZE = 20
+NUM_FRAMES = 20
 
 
-Lx = 512 # Parameter to scale lattice size along x
-Ly = 1 # Parameter to scale lattice size along y
-Lz = 1 # Parameter to scale lattice size along z
+Lx = 128 # Parameter to scale lattice size along x
+Ly = 128 # Parameter to scale lattice size along y
+Lz = 128 # Parameter to scale lattice size along z
 
 
-BATCH = '2p_paper_set'
-RUN ='Emax_barrier_collision'
+BATCH = 'vis_testing'
+RUN ='2'
 
 
 
 
-DEVICES = [1, 4] # References to devices to use
+DEVICES = [0,1] # References to devices to use
 
 
 ######################################################################################
@@ -35,16 +35,16 @@ DEVICES = [1, 4] # References to devices to use
 ############################# INITIAL CONDITIONS #####################################
 
 
-INIT = "gaussians_2P_1D"
-# INIT = 'double_quadrupole_3d'
+#INIT = "gaussians_2P_1D"
+INIT = 'double_quadrupole_3d'
 #INIT = 'double_quadrupole'
 #INIT = 'pade_quadrupole'
 
 
 ############################ SIMULATION PHYSICS MODEL ################################
 
-# MODEL = 'spin2_BEC'
-MODEL = "No_Self_Interaction"
+MODEL = 'spin2_BEC'
+# MODEL = "No_Self_Interaction"
 # MODEL = "Internal_Function"
 
 
@@ -52,18 +52,18 @@ MODEL = "No_Self_Interaction"
 ############################ EXPERIMENT KEYWORDS #####################################
 
 
-# EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 5, "orientation1" : "x"} 
+EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 5, "orientation1" : "x"} 
 # EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution2" : 2, "orientation2" : "x", "y_shift2" : 1./4.} 
-EXP_KWARGS = {'momentums': [4.0, 0.0, 4.0, 0.0], 'shifts': [0.3, 0.7, 0.4, 0.8], 'sigmas': [0.025, 0.025, 0.25, 0.25]}
+# EXP_KWARGS = {'momentums': [4.0, 0.0, 4.0, 0.0], 'shifts': [0.3, 0.7, 0.4, 0.8], 'sigmas': [0.025, 0.025, 0.25, 0.25]}
 ### 'cond_list': ['X1==X2', 'true'], 'func_list': ['0.', '(4.*pi)*(1./abs(X1-X2))'], coulomb
 
 ###########################  EXTERNAL POTENTIAL #####################################
 
 
-# POTENTIAL = "No_Potential"
-# POTENTIAL_KWARGS = {}
-POTENTIAL = "External_Function"
-POTENTIAL_KWARGS = {"cond_list":["X1<Lx/10. && X2<Lx/10.", "(X1<Lx/10. && X2>Lx/10.) || (X1>Lx/10. && X2<Lx/10.)", "true"],"func_list" : ["(pi/50.)","(pi/100.)","0."]}
+POTENTIAL = "No_Potential"
+POTENTIAL_KWARGS = {}
+# POTENTIAL = "External_Function"
+# POTENTIAL_KWARGS = {"cond_list":["X1<Lx/10. && X2<Lx/10.", "(X1<Lx/10. && X2>Lx/10.) || (X1>Lx/10. && X2<Lx/10.)", "true"],"func_list" : ["(pi/50.)","(pi/100.)","0."]}
 # double trap POTENTIAL_KWARGS = {"cond_list":["X1<Lx/2. && X2<Lx/2.","X1>=Lx/2. && X2>=Lx/2.","X1<Lx/2. && X2>=Lx/2.", "X1>=Lx/2. && X2<Lx/2."],"func_list" : ["((pi/12.)/(Lx*Lx))*((X1-Lx/4.)*(X1-Lx/4.)+(X2-Lx/4.)*(X2-Lx/4.))","((pi/12.)/(Lx*Lx))*((X1-3.*Lx/4.)*(X1-3.*Lx/4.)+(X2-3.*Lx/4.)*(X2-3.*Lx/4.))","((pi/12.)/(Lx*Lx))*((X1-Lx/4.)*(X1-Lx/4.)+(X2-3.*Lx/4.)*(X2-3.*Lx/4.))","((pi/12.)/(Lx*Lx))*((X1-3.*Lx/4.)*(X1-3.*Lx/4.)+(X2-Lx/4.)*(X2-Lx/4.))"]} 
 # single trap POTENTIAL_KWARGS = {"cond_list":["true"],"func_list" : ["((pi/40.)/(Lx*Lx))*((X1-Lx/2.)*(X1-Lx/2.)+(X2-Lx/2.)*(X2-Lx/2.))"]}
 
@@ -80,12 +80,13 @@ MEASUREMENT_KWARGS = {}
 ########################   VISUALIZATION TECHNIQUE #################################
 
 # VISUALIZATION = '1D_1P'
-VISUALIZATION = '1D_2P'
+# VISUALIZATION = '1D_2P'
 # VISUALIZATION = 'mayavi_2d_surface'
 # VISUALIZATION = 'mayavi_3d_isosurface_full' 
+VISUALIZATION = 'total_density_isosurface'
 
 
-VIS_KWARGS = {"fps":6, 'save_entanglement':True}
+VIS_KWARGS = {"fps":6, "full" : True, "contour_percent" : [.15]}
 
 #####################################SETUP#######################################
 # ALWAYS RUN THIS
@@ -94,9 +95,9 @@ QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz,
 			VISUALIZATION, VIS_KWARGS, MEASUREMENT, MEASUREMENT_KWARGS)
 
 ################################# EXPERIMENT  ########################################
-QLGA.run()
+#QLGA.run()
 # QLGA.run_no_vis()
 # QLGA.vis()
 # QLGA.ani()
-# QLGA.vis_ani()
+QLGA.vis_ani()
 # QLGA.resume()
