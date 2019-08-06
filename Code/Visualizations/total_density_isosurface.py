@@ -25,6 +25,7 @@ DTYPE = np.complex
 fig_myv = mlab.figure(size=(1200,1200),bgcolor=(1,1,1),fgcolor=(0.,0.,0.))
 mf_levels = []
 max_value = 0.
+min_value = 0.
 
 
 alpha = 255*np.power(np.linspace(0, 1, 256), .7)
@@ -97,11 +98,12 @@ def set_rho(data_dir, global_vars, full):
 
 # ANIMATE THE FIGURE WITH MOVIEPY, WRITE AN ANIMATED GIF
 def plotComponent(data_dir, frame, image_dir, frames, global_vars, full = False, contour_percent = [0.25, 0.5, .75], **kwargs):
-	global max_value
+	global max_value, min_value
 	RhoField, r, g, b = set_rho(data_dir, global_vars, full)
 	if frame == "Frame_00000000.npy":
 		max_value = np.amax(RhoField.real)
-	i = [max_value*cp for cp in contour_percent]
+		min_value = np.amin(RhoField.real)
+	i = [min_value + (max_value - min_value)*cp for cp in contour_percent]
 	mlab.clf()
 	make_surface(RhoField, np.ones(RhoField.shape), white_lut, i)
 	make_surface(RhoField, r, red_lut, i)

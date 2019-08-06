@@ -100,15 +100,14 @@ def get_max(QuantumState, component, frames, directory):
 
 def get_mf_levels(directory, frames):
   global mf_levels
-  mf_levels.append(1)
-  # QuantumState = np.load(directory.split("Frame")[0] + frames[-1])
-  # vectorSize = QuantumState.shape[3]
-  # for mf in xrange(vectorSize/2):
-  #   if np.any(QuantumState[:,:,:,mf*2]):
-  #     print("Found a non-zero field in mf = " + str(2 - mf))
-  #     mf_levels.append(mf)
-  #   else:
-  #   	print("We found the mf " + str(2 - mf) + " to be empty")
+  QuantumState = np.load(directory.split("Frame")[0] + frames[-1])
+  vectorSize = QuantumState.shape[3]
+  for mf in xrange(vectorSize/2):
+    if np.any(QuantumState[:,:,:,mf*2]):
+      print("Found a non-zero field in mf = " + str(2 - mf))
+      mf_levels.append(mf)
+    else:
+    	print("We found the mf " + str(2 - mf) + " to be empty")
 
 def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, **kwargs):
 	global mf_levels

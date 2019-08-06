@@ -9,7 +9,7 @@ import AbstractionLayer as QLGA
 # For particles >=2, (x,y,z) represents indices of number basis kets along each direction, ie. if xDim=L then XBLOCK*XGRID = L(2*L-1)
 PARTICLES = 1
 KINETIC_OPERATOR = 'S'   # S for Schroedinger equation, D for Dirac ... 
-FRAME_SIZE = 20
+FRAME_SIZE = 10
 NUM_FRAMES = 20
 
 
@@ -19,7 +19,7 @@ Lz = 128 # Parameter to scale lattice size along z
 
 
 BATCH = 'vis_testing'
-RUN ='2'
+RUN ='3'
 
 
 
@@ -52,8 +52,8 @@ MODEL = 'spin2_BEC'
 ############################ EXPERIMENT KEYWORDS #####################################
 
 
-EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 5, "orientation1" : "x"} 
-# EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution2" : 2, "orientation2" : "x", "y_shift2" : 1./4.} 
+# EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 5, "orientation1" : "x"} 
+EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution1" : 1,"solution2" : 2, "orientation2" : "x", "y_shift2" : 1./4.} 
 # EXP_KWARGS = {'momentums': [4.0, 0.0, 4.0, 0.0], 'shifts': [0.3, 0.7, 0.4, 0.8], 'sigmas': [0.025, 0.025, 0.25, 0.25]}
 ### 'cond_list': ['X1==X2', 'true'], 'func_list': ['0.', '(4.*pi)*(1./abs(X1-X2))'], coulomb
 
@@ -82,11 +82,11 @@ MEASUREMENT_KWARGS = {}
 # VISUALIZATION = '1D_1P'
 # VISUALIZATION = '1D_2P'
 # VISUALIZATION = 'mayavi_2d_surface'
-# VISUALIZATION = 'mayavi_3d_isosurface_full' 
-VISUALIZATION = 'total_density_isosurface'
+VISUALIZATION = 'mayavi_3d_isosurface' 
+# VISUALIZATION = 'total_density_isosurface'
 
 
-VIS_KWARGS = {"fps":6, "full" : True, "contour_percent" : [.15]}
+VIS_KWARGS = {"fps":6, "full" : True, "contour_percent" : [.1, .2, .3]}
 
 #####################################SETUP#######################################
 # ALWAYS RUN THIS
@@ -95,7 +95,7 @@ QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz,
 			VISUALIZATION, VIS_KWARGS, MEASUREMENT, MEASUREMENT_KWARGS)
 
 ################################# EXPERIMENT  ########################################
-#QLGA.run()
+# QLGA.run()
 # QLGA.run_no_vis()
 # QLGA.vis()
 # QLGA.ani()
