@@ -1,11 +1,11 @@
 def get_CUDA(dimensions, vectorSize, cond_list = ["true"], func_list = ["sin(X1/Lx)+sin(X2/Lx)"], **kwargs):
 	# Add in scale and shift along X1
 	potentialString = """dcmplx potentialU = 1.;
-		if (""" + cond_list[0] + """){potentialU = exp(-Mul(i,(dcmplx)(""" + func_list[0] + """)));}"""
+		if (""" + cond_list[0] + """){potentialU = exp(-Mul(i/4.,(dcmplx)(""" + func_list[0] + """)));}"""
 	if len(cond_list)>1:
 		for i in xrange(1,len(cond_list)):
 			potentialString += """
-			else if(""" + cond_list[i] + """){potentialU = exp(-Mul(i,(dcmplx)(""" + func_list[i] + """)));}"""
+			else if(""" + cond_list[i] + """){potentialU = exp(-Mul(i/4.,(dcmplx)(""" + func_list[i] + """)));}"""
 	return '''__global__ void external(dcmplx *QField, dcmplx *QFieldCopy, int* lattice, int* gpu_params){
 	int time_step = lattice[14];
 	int deviceNum = gpu_params[0];
