@@ -35,7 +35,7 @@ color = 255*np.ones(256, dtype = np.int32)
 red_lut = np.append(np.append(color, z), np.append(z, alpha)).reshape((4, 256)).T
 blue_lut = np.append(np.append(z, color), np.append(z, alpha)).reshape((4, 256)).T
 green_lut = np.append(np.append(z, z), np.append(color, alpha)).reshape((4, 256)).T
-white_lut = np.append(np.append(z, z), np.append(color, color)).reshape((4, 256)).T
+white_lut = np.append(np.append(color, color), np.append(color, color)).reshape((4, 256)).T
 
 
 ######## CUDA Setup ##########
