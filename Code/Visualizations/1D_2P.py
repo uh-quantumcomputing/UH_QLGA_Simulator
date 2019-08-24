@@ -72,7 +72,7 @@ def psi_projected(x,psi):
         val += psi[x,l]
     return val
 
-def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, save_density = False, save_entanglement = False, **kwargs):
+def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, save_density = False, save_entanglement = False, save_expectation_value = False, exp_range = [0,0], **kwargs):
     global yMax
     frame_number = (frame.split("_")[1]).split(".")[0]
     print "Plotting", frame_dir
@@ -124,7 +124,8 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     gpuAnalyticFieldImag = drv.to_device(AnalyticFieldImag)
     get_QS(gpuQField, gpuQF_x1_x2_real, gpuQF_x1_x2_imag, gpuLattice, block=(blockX,blockY,blockZ), grid=(gridX,gridY,gridZ))
     get_Rho_projected(gpuQF_x1_x2_real, gpuQF_x1_x2_imag, gpuRho_projected_real, gpuLattice, block=(blockX_x1_x2,blockY_x1_x2,blockZ_x1_x2), grid=(gridX_x1_x2,gridY_x1_x2,gridZ_x1_x2))
-    calcPurity(gpuQF_x1_x2_real, gpuQF_x1_x2_imag, gpuPurity, gpuLattice, block=(blockX_x1_x2,blockY_x1_x2,blockZ_x1_x2), grid=(gridX_x1_x2,gridY_x1_x2,gridZ_x1_x2))
+    if save_entanglement:
+        calcPurity(gpuQF_x1_x2_real, gpuQF_x1_x2_imag, gpuPurity, gpuLattice, block=(blockX_x1_x2,blockY_x1_x2,blockZ_x1_x2), grid=(gridX_x1_x2,gridY_x1_x2,gridZ_x1_x2))
     # get_Analytic(gpuAnalyticFieldReal, gpuAnalyticFieldImag, gpuAn, gpuBn, gpuAn2, gpuBn2, gpuLattice, gpuTime, block=(blockX,blockY,blockZ), grid=(gridX,gridY,gridZ))
     QuantumField_x1_x2_real = drv.from_device(gpuQF_x1_x2_real, QuantumField_x1_x2_real.shape, np.float64)
     QuantumField_x1_x2_imag = drv.from_device(gpuQF_x1_x2_imag, QuantumField_x1_x2_imag.shape, np.float64)
@@ -148,7 +149,9 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     entanglement = 1-2.*purity[0]/(rho_total*rho_total)
     # prob = np.sum(RhoFieldProjected.real)
     # probP = np.sum((QuantumState*QuantumState.conjugate()).real)
-    time_text = plt.suptitle(r'$\tau = $' + str(time) + '    ' + r'$\mathcal{E} = $' + str(entanglement) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
+    time_text = plt.suptitle(r'$\tau = $' + str(time) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
+    if save_entanglement:
+        time_text = plt.suptitle(r'$\tau = $' + str(time) + '    ' + r'$\mathcal{E} = $' + str(entanglement) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
     # full_text = plt.suptitle(r'$\tau = $' + str(time) + '    ' + r'$P_{f} = $' + str('{:1.15f}'.format(prob)) + '     ' + r'$P_{p} = $' + str('{:1.15f}'.format(probP)),fontsize=14,horizontalalignment='center',verticalalignment='top')
     gs = gridspec.GridSpec(1,1)
     ax = fig.add_subplot(gs[0,0], xlim=(0,xSize), xlabel=r'$x(\ell)$', ylim=(-0.0000001, 1.1*yMax), ylabel=r'${| \Psi |}^{2}$')
@@ -174,9 +177,29 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
 			entanglementArray = np.asarray([[entanglement, time]])
 		else:
 			entArrayOld = np.load(ent_dir + '/entanglement.npy'  )
-			entArrayNew = np.asarray([entanglement, time])
-			entanglementArray =  np.append(entArrayOld, entArrayNew, axis=0)
-		np.save(ent_dir + '/entanglement'  , entanglementArray)
+			entArrayNew = np.asarray([[entanglement, time]])
+			entanglementArray = np.append(entArrayOld, entArrayNew, axis=0)
+		np.save(ent_dir + '/entanglement' , entanglementArray)
+
+    if save_expectation_value:
+        exp_dir = frame_dir.split("Data")[0] + "expectation"
+        if not os.path.exists(exp_dir+ '/'):
+            os.makedirs(exp_dir + '/')
+        print "Saving expectation to", exp_dir + '/expectation.npy'
+        exp_val = 0.
+        if exp_range==[0,0]:
+            for x in xrange(xSize):
+                exp_val += x*RhoFieldProjected[x].real
+        else:
+            for x in xrange(int(exp_range[0]*xSize),int(exp_range[1]*xSize),1):
+                exp_val += x*RhoFieldProjected[x].real
+        if time==0:
+            expectationArray = np.asarray([exp_val])
+        else:
+            expArrayOld = np.load(exp_dir + '/expectation.npy'  )
+            expArrayNew = np.asarray([exp_val])
+            expectationArray = np.append(expArrayOld, expArrayNew, axis=0)
+        np.save(exp_dir + '/expectation' , expectationArray)
 
     #Free memory
     gpuLattice.free()
