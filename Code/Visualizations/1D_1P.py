@@ -15,8 +15,9 @@ vectorSize = 2
 
 def calculateRho(QuantumField):
     rho = np.zeros(xSize, dtype = DTYPE)
+    psi = QuantumField[:, 0, 0, 0] + QuantumField[:, 0, 0, 1]
     for i in xrange(vectorSize):
-        rho[:] = rho[:] + (QuantumField[:, 0, 0, i] * (QuantumField[:, 0, 0, i]).conjugate())
+        rho[:] = rho[:] + (psi[:] * (psi[:]).conjugate())
     return rho
 
 
@@ -64,7 +65,7 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     time_text = plt.suptitle(r'$\tau = $' + str(time) + "              "
                        + "              " + '$P = $' + str(Prob.real) ,fontsize=14,horizontalalignment='center',verticalalignment='top')
     gs = gridspec.GridSpec(1,1)
-    ax = fig.add_subplot(gs[0,0], xlim=(0,xSize-1), xlabel=r'$x(\ell)$', ylim=(-0.001, 1.1*yMax), ylabel=r'${| \Psi |}^{2}$')
+    ax = fig.add_subplot(gs[0,0], xlim=(0,xSize-1), xlabel=r'$x(\ell)$', ylim=(-0.000001, 1.1*yMax), ylabel=r'${| \Psi |}^{2}$')
     ax.plot(rho.real,zorder=2)
 
     if not os.path.exists(image_dir + '/'):

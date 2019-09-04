@@ -17,10 +17,11 @@ def get_CUDA(dimensions, vectorSize, cond_list = ["true"],func_list = ["sin(X)"]
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
 	int z = blockIdx.z * blockDim.z + threadIdx.z;
+	double this_x = double(x+deviceNum*lattice[0]);
 	int n;
 	dcmplx i(0.,1.);
 	dcmplx field(0.,0.);
-	double X = (double)(x);
+	double X = (double)(this_x);
 	double Y = (double)(y);
 	double Z = (double)(z);
 	double T = (double)time_step;
@@ -30,7 +31,7 @@ def get_CUDA(dimensions, vectorSize, cond_list = ["true"],func_list = ["sin(X)"]
 	''' + potentialString + '''
 	
 	for (n=0; n<vectorSize; n=n+1){
-		field = Mul(potentialU,QFieldCopy[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize]);
+		field = Mul(potentialU,QField[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize]);
 		QField[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize] = field;
 		QFieldCopy[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize] = field;
 	}  
