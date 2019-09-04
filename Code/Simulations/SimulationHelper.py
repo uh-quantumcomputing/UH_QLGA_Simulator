@@ -65,7 +65,8 @@ global_vars = {
 "measurement" : None,
 "potential_kwargs" : None,
 "measurement_kwargs" : None,
-  
+"visualization" : None,
+"vis_kwargs" : None,
 "base_directory_name" : None
 }
 
@@ -86,10 +87,10 @@ def set_size(Lx, Ly, Lz, PARTICLES, DEVICES):
   get_dimensions(Lx, Ly, Lz)
   set_lattice(Lx, Ly, Lz)
 
-def set_experiment(MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT, EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS):
+def set_experiment(MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT, EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS, VIS_KWARGS):
   global global_vars
   global_vars["model"], global_vars["kinetic_operator"], global_vars["init"], global_vars["potential"], global_vars['measurement'] = MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT
-  global_vars["exp_kwargs"], global_vars["potential_kwargs"], global_vars["measurement_kwargs"] = EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS
+  global_vars["exp_kwargs"], global_vars["potential_kwargs"], global_vars["measurement_kwargs"], global_vars["vis_kwargs"] = EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS, VIS_KWARGS
   global_vars["vectorSize"] = modelSizes.sizes[MODEL+ "_" + str(global_vars["particle_number"]) + "P"]
 
 def set_runtime(FRAME_SIZE, NUM_FRAMES, TIME_STEP = 0):
@@ -132,11 +133,14 @@ def set_lattice(Lx, Ly, Lz):
     print("Unsupported particle number and dimensionality combination.  Try again.")
     quit()
 
+def load_global_vars(path):
+  global global_vars
+  global_vars = dd.io.load(path)
 
-
-def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False, ANI_ONLY = False, root_save_file = '/home/' + username + '/Desktop/Experiments'): 
+def set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY, OVERWRITE, root_save_file = '/home/' + username + '/Desktop/Experiments'): 
   global global_vars
   first_time = False
+  global_vars["visualization"] = VISUALIZATION
   global_vars["base_directory_name"] = (root_save_file + "/" + BATCH + "/" + RUN + "/" )
   base_directory_name = global_vars["base_directory_name"]
   continue_sim = ''
@@ -150,7 +154,6 @@ def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False
     if len(data_files) == 0:
       first_time = True
   elif not OVERWRITE:
-    if not ANI_ONLY:
       print("LOOK FOR DIALOGUE BOX")
       print("You may be overwriting previous experiments")
       continue_sim = give_overwrite_permission(base_directory_name)
@@ -163,14 +166,16 @@ def set_directory(BATCH, RUN, VISUALIZATION, OVERWRITE = False, VIS_ONLY = False
     if os.path.exists(ani_dir):
       shutil.rmtree(ani_dir)
   else:
-    if not first_time and not ANI_ONLY:
+    if not first_time:
       quit()
-  dd.io.save(base_directory_name + 'meta_data.h5', global_vars)
+  meta_data = base_directory_name + 'meta_data.h5'
+  dd.io.save(meta_data, global_vars)
   f= open(base_directory_name + "experiment_details.txt","w+")
   f.write(stringify(global_vars))
   f.close()
   print("Running an experiment in " + base_directory_name + "with:" )
   print(stringify(global_vars))
+  return meta_data
 
 def give_overwrite_permission(base_directory_name):
   root = tk.Tk()
@@ -193,6 +198,7 @@ def init_GPU():
     QuantumState.append(np.zeros((xSize/num_GPUs, ySize, zSize, vectorSize), dtype=DTYPE))
   for i in xrange(num_GPUs):
     gpu.append(init.gpuObject(QuantumState, global_vars["devices"][i], i, global_vars))
+    print i
     gpu[i].initialize()
   if num_GPUs > 1 :
     for i in xrange(num_GPUs):
@@ -220,22 +226,24 @@ def simulate(PRINTING_SUR = True):
       seconds_remaining = (num_frames - i-1)*(end_time - start_time)
       print "Time remaining is approximately",
       print_time(seconds_remaining)
-  #zeroFieldsGPU()
-  clearGPU()
+  # zeroFieldsGPU()
   clearFiles()
+  clearGPU()
   print("Simulation Complete")
 
 
 ##########################    Visualization   #####################################
 
 
-def visualize(technique, **kwargs):
-  visualizer = vis.visualizer(technique, global_vars, **kwargs)  
-  visualizer.visualize(**kwargs)
+def visualize():
+  visualization, vis_kwargs = global_vars["visualization"], global_vars["vis_kwargs"]
+  visualizer = vis.visualizer(visualization, global_vars, **vis_kwargs)  
+  visualizer.visualize(**vis_kwargs)
 
-def animate(technique, **kwargs):
-  visualizer = vis.visualizer(technique, global_vars, **kwargs)  
-  visualizer.animate(**kwargs)
+def animate():
+  visualization, vis_kwargs = global_vars["visualization"], global_vars["vis_kwargs"]
+  visualizer = vis.visualizer(visualization, global_vars, **vis_kwargs)  
+  visualizer.animate(**vis_kwargs)
 ##############   Methods that make strings ########################################
 
 

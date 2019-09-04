@@ -218,6 +218,25 @@ __global__ void copy(dcmplx *QField, dcmplx *QField2, int* lattice){
     }
 }
 
+// Zero Fields
+__global__ void zeroFields(dcmplx *QField, dcmplx *QField2, int* lattice) {
+  int xSize = lattice[0];
+  int ySize = lattice[2];
+  int zSize = lattice[4];
+  int vectorSize = lattice[12];
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  int z = blockIdx.z * blockDim.z + threadIdx.z;
+  int n;
+
+  // SET NEW FIELD
+  for (int i = 0; i < vectorSize; i ++){
+    QField[i+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize] = 0.;
+    QField2[i+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize] = 0.;
+  }
+    
+} 
+
 __global__ void incrementTime(int* lattice){
     lattice[14] += 1;
 }

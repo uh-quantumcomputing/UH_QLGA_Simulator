@@ -36,6 +36,7 @@ class visualizer:
 
 	def get_frames(self):
 		arr = os.listdir(self.directory_name + "Data/")
+		print arr
 		arr_new = [x for x in arr if x not in self.already_visualized]
 		arr_new.sort()
 		return arr_new
@@ -48,6 +49,7 @@ class visualizer:
 
 	def visualize(self, **kwargs):
 		for frame in self.frames:
+			print (frame)
 			self.frame_maker(self.directory_name  + "Data/" + frame, frame, self.image_dir, self.frames, self.global_vars, **kwargs)
 
 	def animate(self, fps = 2, **kwargs):

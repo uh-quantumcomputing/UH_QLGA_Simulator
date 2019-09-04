@@ -1,9 +1,11 @@
 "Importing initialization files..."
 import pycuda.driver as drv 
+import pycuda.tools as tools
 import numpy as np
 from importlib import import_module
 from shutil import copyfile
 import os
+import gc
 
 drv.init() 
 DTYPE = np.complex
@@ -19,6 +21,7 @@ class gpuObject:
 		self.deviceNum = deviceNum
 		self.device = drv.Device(deviceID) 
 		self.context = self.device.make_context(drv.ctx_flags.SCHED_YIELD)
+		print self.context
 		self.compile_init_source(global_vars)
 		self.compile_model_source(global_vars)
 		init_source = 'Code/Initialization/compiled_init_cuda_code_' + str(deviceNum) + '.py'
@@ -98,6 +101,8 @@ class gpuObject:
 		self.QField.free()
 		self.QFieldCopy.free()
 		self.context.pop()
+		tools.clear_context_caches()
+		gc.collect()
 		self.context.detach()
 		print "Memory Freed for device ", self.deviceNum
 
@@ -175,7 +180,8 @@ class gpuObject:
 
 	def zeroFields(self):
 		self.context.push()
-		self.zeroField_GPU(self.QField, self.QFieldCopy, self.gpuVortField, self.GPU_Lattice, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX, self.gridY, self.gridZ))
+		zero_fields = self.gpuModelMagic.get_function("zeroFields")
+		zero_fields(self.QField, self.QFieldCopy, self.GPU_Lattice, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX, self.gridY, self.gridZ))
 		self.context.pop()
 
 	def enableBoundaryAccess(self, bound_context):
