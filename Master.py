@@ -1,6 +1,6 @@
-import setup as QLGA
 import os
-from types import ModuleType
+import AbstractionLayer as QLGA
+
 
 
 ######################################################################################
@@ -10,24 +10,24 @@ from types import ModuleType
 # For particles >=2, (x,y,z) represents indices of number basis kets along each direction, ie. if xDim=L then XBLOCK*XGRID = L(2*L-1)
 PARTICLES = 1
 KINETIC_OPERATOR = 'S'   # S for Schroedinger equation, D for Dirac ... 
-FRAME_SIZE = 20
-NUM_FRAMES = 30
+FRAME_SIZE = 5
+NUM_FRAMES = 2
 
 
-Lx = 256 # Parameter to scale lattice size along x
-Ly = 256 # Parameter to scale lattice size along y
-Lz = 256 # Parameter to scale lattice size along z
+Lx = 128 # Parameter to scale lattice size along x
+Ly = 128 # Parameter to scale lattice size along y
+Lz = 128 # Parameter to scale lattice size along z
 
 
-BATCH = '3D Vortex Collisions'
-RUN =''
-
-
-
+BATCH = 'Multi_run_test'
+RUN ='sols 1, 3'
 
 DEVICES = [0,1] # References to devices to use
 
 
+VIS_ONLY = False
+ANI_ONLY = False
+OVERWRITE = True
 ######################################################################################
 ########################## SIMULATION PARAMS END #####################################
 ######################################################################################
@@ -84,22 +84,16 @@ MEASUREMENT_KWARGS = {}
 # VISUALIZATION = '1D_2P'
 # VISUALIZATION = 'mayavi_2d_surface'
 # VISUALIZATION = 'mayavi_3d_isosurface' 
-VISUALIZATION = 'total_density_isosurface'
-# VISUALIZATION = 'colored_mf_isosurface'
+# VISUALIZATION = 'total_density_isosurface'
+VISUALIZATION = 'colored_mf_isosurface'
 
 
-VIS_KWARGS = {"fps":6, "contour_percent" : [.2]}
-
-RUN_TYPE = 'vis' # 'run' or 'vis'
+VIS_KWARGS = {"fps":6, "contour_percent" : [.25], 'characteristics' : False}
 
 
-for i in xrange(1, 2):
-	for j in xrange(i, 2):
-		RUN ='sols ' + str(i) + ', ' + str(j)
-		EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution1" : i,"solution2" : j, "orientation2" : "x", "y_shift2" : 1./4.} 
-		meta_data = QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz, 
-								BATCH, RUN, DEVICES, INIT, MODEL, EXP_KWARGS, POTENTIAL, POTENTIAL_KWARGS,
-								VISUALIZATION, VIS_KWARGS, MEASUREMENT, MEASUREMENT_KWARGS,
-								RUN_TYPE, OVERWRITE = True)
-		os.system("python AbstractionLayer.py " + RUN_TYPE + " " + meta_data)
-
+for i in xrange(1, 8):
+	for j in xrange(i, 8):
+		QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz, 
+			BATCH, RUN, DEVICES, INIT, MODEL, EXP_KWARGS, POTENTIAL, POTENTIAL_KWARGS,
+			VISUALIZATION, VIS_KWARGS, MEASUREMENT, MEASUREMENT_KWARGS, VIS_ONLY, ANI_ONLY, OVERWRITE)
+		os.system("python SimulationMaster.py ")
