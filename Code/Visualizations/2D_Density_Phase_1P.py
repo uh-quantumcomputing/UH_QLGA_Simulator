@@ -92,35 +92,30 @@ def set_globals(global_vars, QuantumState):
     yAxis = np.arange(ySize)
     vectorSize = global_vars["vectorSize"]
 
-def putLabels(x_label, y_label, colorbar_label):
-  cbar = plt.colorbar(shrink = .9)
-  cbar.set_label(colorbar_label, fontsize=14)
-  cbar.ax.tick_params(labelsize=10)
-  plt.xlabel(x_label).set_fontsize(24)
-  plt.ylabel(y_label).set_fontsize(24)
-  plt.tick_params(axis="both",which="major",labelsize=16)
-  plt.tick_params(axis="both",which="minor",labelsize=16)
-
-def trim_axs(axs, N):
-    """little helper to massage the axs list to have correct length..."""
-    axs = axs.flat
-    for ax in axs[N:]:
-        ax.remove()
-    return axs[:N]
+def putLabels(fig, ax, im, x_label, y_label, colorbar_label):
+    cbar = plt.colorbar(im, ax=ax) #fig.colorbar(im, shrink = .9)
+    cbar.set_label(colorbar_label, fontsize=18)
+    cbar.ax.tick_params(labelsize=10)
+    ax.set_xlabel(x_label).set_fontsize(24)
+    ax.set_ylabel(y_label).set_fontsize(24)
+    ax.tick_params(axis="both",which="major",labelsize=16)
+    ax.tick_params(axis="both",which="minor",labelsize=16)
+    ax.set_aspect('auto')
 
 
-def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches = False, ds_wall_params=[60,60,360], fig_size=(15,12), **kwargs):
+def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches = False, ds_wall_params=[60,60,360], fig_size=(16,12), **kwargs):
     # print i
     global rhoMin, rhoMax
     frame_number = (frame.split("_")[1]).split(".")[0]
     QuantumState = np.load(frame_dir)
     if int(frame_number) == 0:
-        set_globals(file_name, QuantumState)
-    PhaseField = np.zeros((xSize, ySize), dtype = np.float64)
+        set_globals(global_vars, QuantumState)
     RhoFields = []
+    PhaseFields = []
     num_comps = int(len(QuantumState[0,0,0,:])/2)
     for comp in xrange(num_comps):
         RhoFields.append((QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1])*(QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).conjugate())
+        PhaseFields.append(np.arctan2((QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).imag,(QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).real))
     if int(frame_number) == 0:
         for comp in xrange(num_comps):
             if np.amax(RhoFields[comp].real)>rhoMax:
@@ -131,16 +126,35 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
     fig, axs = plt.subplots(num_comps, 2, figsize=fig_size, constrained_layout=True)
     plt.rc('text', usetex=True)
     #Ref below    
-    time = frame_number
-    time_text = plt.suptitle(r'$\tau = $' + str(time), fontsize=14,horizontalalignment='center',verticalalignment='top')
+    time = int(frame_number)
+    time_text = plt.suptitle(r'$\tau = $' + str(time), fontsize=14, horizontalalignment='center',verticalalignment='top')
 
-    # axs = trim_axs(axs, len(cases))
-    cases = np.arange(num_comps)
+
+    cases = np.arange(2*num_comps)
     for ax, case in zip(axs, cases):
-        ax.imshow(RhoFields[case].real, extent=(np.amin(yAxis), np.amax(yAxis), np.amin(xAxis), np.amax(xAxis)), origin = 'lower',
-            alpha = 0.6, cmap=blues_alpha, norm=colors.SymLogNorm(linthresh=linThresh*rhoMax,linscale=linScale,vmin=0.,vmax=rhoMax))
-        putLabels('', r'$x\ \ (\ell)$', r'$\rho \ \ (\frac{1}{\ell^2})$')
-        ax.set_aspect('auto')
+        if case%2==0:
+            im = ax.imshow(RhoFields[int(case/2)].real, extent=(np.amin(yAxis), np.amax(yAxis), np.amin(xAxis), np.amax(xAxis)), origin = 'lower',
+                alpha = 1.0, cmap=blues_alpha, norm=colors.SymLogNorm(linthresh=linThresh*rhoMax,linscale=linScale,vmin=0.,vmax=rhoMax))
+            putLabels(fig,ax,im,r'$y\ \ (\ell)$', r'$x\ \ (\ell)$', r'$\rho \ \ (\frac{1}{\ell^2})$')
+            ax.set_aspect('auto')
+        else:
+            # # Phase
+            im = ax.imshow((PhaseFields[int(case/2)].real), extent=(np.amin(yAxis), np.amax(yAxis), np.amin(xAxis), np.amax(xAxis)), origin = 'lower',
+                cmap=colorMapPhase, norm=colors.Normalize(vmin=0.,vmax=2.*np.pi))
+            # Any value whose absolute value is > .0001 will have zero transparency
+            rhoMaxCase = np.amax(RhoFields[int(case/2)].real)
+            alphas = Normalize(0, rhoMaxCase, clip=True)((rhoMaxCase-RhoFields[int(case/2)].real))
+            # # alphas = colors.SymLogNorm(linthresh=linThresh*rhoMax,linscale=linScale,vmin=0.,vmax=10., clip=True)((rhoMax-RhoField.real).T)
+            alphas = np.clip(alphas**4, 0.0, 1)  # alpha value clipped at the bottom at .4
+            # Normalize the colors b/w 0 and 1, we'll then pass an MxNx4 array to imshow
+            cmap = plt.cm.gist_gray.reversed()
+            colorsMap = colors.SymLogNorm(linthresh=linThresh*rhoMaxCase,linscale=linScale,vmin=0.,vmax=rhoMaxCase)((0.*RhoFields[int(case/2)].real))
+            colorsMap = cmap(colorsMap)
+
+            # Now set the alpha channel to the one we created above
+            colorsMap[..., -1] = alphas
+            ax.imshow(colorsMap, origin = 'lower')
+            putLabels(fig,ax,im,r'$y\ \ (\ell)$', r'$x\ \ (\ell)$', r'$\theta \ \ (Radians)$')
 
         if add_ds_patches:
             #Add walls and screen
@@ -195,77 +209,11 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
               )
 
 
-    # # Phase
-    # plt.subplot(212)
-    # plt.imshow((PhaseField.real), extent=(np.amin(yAxis), np.amax(yAxis), np.amin(xAxis), np.amax(xAxis)), origin = 'lower',
-    #     cmap=colorMapPhase, norm=colors.Normalize(vmin=0.,vmax=2.*np.pi))
-    # putLabels(r'$y\ \ (\ell)$', r'$x\ \ (\ell)$', r'$\theta \ \ (Radians)$')
-    # # Any value whose absolute value is > .0001 will have zero transparency
-    # alphas = Normalize(0, rhoMax, clip=True)((rhoMax-RhoField.real))
-    # # alphas = colors.SymLogNorm(linthresh=linThresh*rhoMax,linscale=linScale,vmin=0.,vmax=10., clip=True)((rhoMax-RhoField.real).T)
-    # alphas = np.clip(alphas**4, 0.0, 1)  # alpha value clipped at the bottom at .4
-    # # Normalize the colors b/w 0 and 1, we'll then pass an MxNx4 array to imshow
-    # cmap = plt.cm.gist_gray
-    # colorsMap = colors.SymLogNorm(linthresh=linThresh*rhoMax,linscale=linScale,vmin=0.,vmax=rhoMax)((0.*RhoField.real))
-    # colorsMap = cmap(colorsMap)
-
-    # # Now set the alpha channel to the one we created above
-    # colorsMap[..., -1] = alphas
-    # plt.imshow(colorsMap, extent=(np.amin(yAxis), np.amax(yAxis), np.amin(xAxis), np.amax(xAxis)), origin = 'lower')
-
-    # ax = plt.gca()
-    # ax.set_aspect('auto')
-
-    # #Double slit
-    # ax.add_patch(patches.Rectangle(
-    #     (0.,2.*(xSize-1)/5.-wall_width/2.), #xLoc,yLoc
-    #     ySize/2. - spacing/2. - slit_width/2.,  #Width
-    #     wall_width,  #Height
-    #     color = 'white'
-    #     )
-    #   )
-    # ax.add_patch(patches.Rectangle(
-    #     ((ySize-1.)/2. - spacing/2. + slit_width/2.,2.*(xSize-1)/5.-wall_width/2.), #xLoc,yLoc
-    #     spacing - slit_width,  #Width
-    #     wall_width,  #Height
-    #     color = 'white'
-    #     )
-    #   )
-    # ax.add_patch(patches.Rectangle(
-    #     ((ySize-1.)/2. + spacing/2. + slit_width/2.,2.*(xSize-1)/5.-wall_width/2.), #xLoc,yLoc
-    #     ySize/2. - spacing/2. - slit_width/2.,  #Width
-    #     wall_width,  #Height
-    #     color = 'white'
-    #     )
-    #   )
-
-
-    # #Screen
-    # ax.add_patch(patches.Rectangle(
-    #     (0.,2.*(xSize)/3.), #xLoc,yLoc
-    #     ySize,  #Width
-    #     wall_width/8.,  #Height
-    #     color = 'red'
-    #     )
-    #   )
-    # #Boundary walls
-    # ax.add_patch(patches.Rectangle(
-    #     (0.,0.), #xLoc,yLoc
-    #     ySize,  #Width
-    #     wall_width,  #Height
-    #     color = 'white'
-    #     )
-    #   )
-    # ax.add_patch(patches.Rectangle(
-    #     (0.,xSize-wall_width), #xLoc,yLoc
-    #     ySize,  #Width
-    #     wall_width,  #Height
-    #     color = 'white'
-    #     )
-    #   )
-
-    # fig.tight_layout(rect=[0, 0.03, 1, 0.95])
-
-    return fig
+    # fig.tight_layout(rect=[0, 0.03, 1.2, 1.15])
+    if not os.path.exists(image_dir + '/'):
+        os.makedirs(image_dir + '/')
+    fig.savefig(image_dir + '/Frame_' + frame_number +".png")
+    print "Saved " + image_dir + '/Frame_' + frame_number +".png"
+    plt.close(fig)
 
 
