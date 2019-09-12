@@ -18,9 +18,9 @@ def get_CUDA(vectorSize = 10, func = "sin(X)", px = "0.", py = "0.", pz = "0.", 
 	double Lx = (double) xSize;
 	double Ly = (double) ySize;
 	double Lz = (double) zSize;
-	dcmplx phaseKickX = exp(i*(-'''+px+'''*2.*pi)*(X)/(double)(xSize));
-	dcmplx phaseKickY = exp(i*(-'''+py+'''*2.*pi)*(Y)/(double)(ySize));
-	dcmplx phaseKickZ = exp(i*(-'''+pz+'''*2.*pi)*(Z)/(double)(zSize));
+	dcmplx phaseKickX = exp(i*(-('''+str(px)+''')*2.*pi)*(X)/Lx);
+	dcmplx phaseKickY = exp(i*(-('''+str(py)+''')*2.*pi)*(Y)/Ly);
+	dcmplx phaseKickZ = exp(i*(-('''+str(pz)+''')*2.*pi)*(Z)/Lz);
 	dcmplx field = ''' + func + '''*phaseKickX*phaseKickY*phaseKickZ;
 	
 	for (n=0; n<vectorSize; n=n+1){

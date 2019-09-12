@@ -50,8 +50,6 @@ def calculateProbability(QuantumField):
 -------- PLOT AND ANIMATE SECTION --------
 ------------------------------------------
 '''
-linThresh = .1
-linScale = 1
 colorMapVort = cm.bwr
 colorMapRho = cm.copper
 colorMapE = cm.inferno
@@ -103,7 +101,7 @@ def putLabels(fig, ax, im, x_label, y_label, colorbar_label):
     ax.set_aspect('auto')
 
 
-def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches = False, ds_wall_params=[60,60,360], fig_size=(16,12), **kwargs):
+def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches = False, ds_wall_params=[60,60,360], fig_size=(16,16), lin_thresh = 0.1, lin_scale = 1., **kwargs):
     # print i
     global rhoMin, rhoMax
     frame_number = (frame.split("_")[1]).split(".")[0]
@@ -114,8 +112,9 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
     PhaseFields = []
     num_comps = int(len(QuantumState[0,0,0,:])/2)
     for comp in xrange(num_comps):
-        RhoFields.append((QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1])*(QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).conjugate())
-        PhaseFields.append(np.arctan2((QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).imag,(QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).real))
+        rho = (QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1])*(QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).conjugate()
+        RhoFields.append(rho/np.sum(rho))
+        PhaseFields.append(np.arctan2((QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).imag,(QuantumState[:,:,0,2*comp]+QuantumState[:,:,0,2*comp+1]).real) + np.pi)
     if int(frame_number) == 0:
         for comp in xrange(num_comps):
             if np.amax(RhoFields[comp].real)>rhoMax:
@@ -134,7 +133,7 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
     for ax, case in zip(axs, cases):
         if case%2==0:
             im = ax.imshow(RhoFields[int(case/2)].real, extent=(np.amin(yAxis), np.amax(yAxis), np.amin(xAxis), np.amax(xAxis)), origin = 'lower',
-                alpha = 1.0, cmap=blues_alpha, norm=colors.SymLogNorm(linthresh=linThresh*rhoMax,linscale=linScale,vmin=0.,vmax=rhoMax))
+                alpha = 1.0, cmap=colorMapBlue, norm=colors.SymLogNorm(linthresh=lin_thresh*rhoMax,linscale=lin_scale,vmin=0.,vmax=rhoMax))
             putLabels(fig,ax,im,r'$y\ \ (\ell)$', r'$x\ \ (\ell)$', r'$\rho \ \ (\frac{1}{\ell^2})$')
             ax.set_aspect('auto')
         else:
@@ -145,10 +144,10 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
             rhoMaxCase = np.amax(RhoFields[int(case/2)].real)
             alphas = Normalize(0, rhoMaxCase, clip=True)((rhoMaxCase-RhoFields[int(case/2)].real))
             # # alphas = colors.SymLogNorm(linthresh=linThresh*rhoMax,linscale=linScale,vmin=0.,vmax=10., clip=True)((rhoMax-RhoField.real).T)
-            alphas = np.clip(alphas**4, 0.0, 1)  # alpha value clipped at the bottom at .4
+            # alphas = np.clip(np.sqrt(alphas), 0.0, 1)  # alpha value clipped at the bottom at .4
             # Normalize the colors b/w 0 and 1, we'll then pass an MxNx4 array to imshow
             cmap = plt.cm.gist_gray.reversed()
-            colorsMap = colors.SymLogNorm(linthresh=linThresh*rhoMaxCase,linscale=linScale,vmin=0.,vmax=rhoMaxCase)((0.*RhoFields[int(case/2)].real))
+            colorsMap = colors.SymLogNorm(linthresh=lin_thresh*rhoMaxCase,linscale=lin_scale,vmin=0.,vmax=rhoMaxCase)((0.*RhoFields[int(case/2)].real))
             colorsMap = cmap(colorsMap)
 
             # Now set the alpha channel to the one we created above
