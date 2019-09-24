@@ -25,6 +25,7 @@ matplotlib.rcParams['text.usetex'] = False
 matplotlib.rcParams['text.latex.unicode'] = True
 matplotlib.rcParams['axes.titlesize'] = 20
 matplotlib.rcParams['axes.labelsize'] = 15
+plt.rc('text', usetex=True)
 
 #constantsvectorSize = 10
 
@@ -91,7 +92,7 @@ def set_globals(global_vars, QuantumState):
     vectorSize = global_vars["vectorSize"]
 
 def putLabels(fig, ax, im, x_label, y_label, colorbar_label):
-    cbar = plt.colorbar(im, ax=ax) #fig.colorbar(im, shrink = .9)
+    cbar = plt.colorbar(im, ax=ax, aspect=40) #fig.colorbar(im, shrink = .9)
     cbar.set_label(colorbar_label, fontsize=18)
     cbar.ax.tick_params(labelsize=10)
     ax.set_xlabel(x_label).set_fontsize(24)
@@ -101,7 +102,7 @@ def putLabels(fig, ax, im, x_label, y_label, colorbar_label):
     ax.set_aspect('auto')
 
 
-def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches = False, ds_wall_params=[60,60,360], fig_size=(16,16), lin_thresh = 0.1, lin_scale = 1., **kwargs):
+def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches = False, ss= False, ds_wall_params=[0.05,0.05,0.15,0.4], fig_size=(16,16), lin_thresh = 0.1, lin_scale = 1., **kwargs):
     # print i
     global rhoMin, rhoMax
     frame_number = (frame.split("_")[1]).split(".")[0]
@@ -123,7 +124,6 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
                 rhoMin = np.amin(RhoFields[comp].real)
 
     fig, axs = plt.subplots(num_comps, 2, figsize=fig_size, constrained_layout=True)
-    plt.rc('text', usetex=True)
     #Ref below    
     time = int(frame_number)
     time_text = plt.suptitle(r'$\tau = $' + str(time), fontsize=14, horizontalalignment='center',verticalalignment='top')
@@ -157,26 +157,28 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
 
         if add_ds_patches:
             #Add walls and screen
-            slit_width = ds_wall_params[0]
-            wall_width = ds_wall_params[1]
-            spacing = ds_wall_params[2]
+            slit_width = ds_wall_params[0]*xSize
+            wall_width = ds_wall_params[1]*xSize
+            spacing = ds_wall_params[2]*xSize
+            wall_center = ds_wall_params[3]*xSize
             #Double slit
             ax.add_patch(patches.Rectangle(
-                (0.,2.*(xSize-1)/5.-wall_width/2.), #xLoc,yLoc
+                (0.,wall_center-wall_width/2.), #xLoc,yLoc
                 ySize/2. - spacing/2. - slit_width/2.,  #Width
                 wall_width,  #Height
                 color = 'black'
                 )
               )
+            if ss==False:
+                ax.add_patch(patches.Rectangle(
+                    ((ySize-1.)/2. - spacing/2. + slit_width/2.,wall_center-wall_width/2.), #xLoc,yLoc
+                    spacing - slit_width,  #Width
+                    wall_width,  #Height
+                    color = 'black'
+                    )
+                  )
             ax.add_patch(patches.Rectangle(
-                ((ySize-1.)/2. - spacing/2. + slit_width/2.,2.*(xSize-1)/5.-wall_width/2.), #xLoc,yLoc
-                spacing - slit_width,  #Width
-                wall_width,  #Height
-                color = 'black'
-                )
-              )
-            ax.add_patch(patches.Rectangle(
-                ((ySize-1.)/2. + spacing/2. + slit_width/2.,2.*(xSize-1)/5.-wall_width/2.), #xLoc,yLoc
+                ((ySize-1.)/2. + spacing/2. + slit_width/2.,wall_center-wall_width/2.), #xLoc,yLoc
                 ySize/2. - spacing/2. - slit_width/2.,  #Width
                 wall_width,  #Height
                 color = 'black'
@@ -195,14 +197,14 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
             ax.add_patch(patches.Rectangle(
                 (0.,0.), #xLoc,yLoc
                 ySize,  #Width
-                wall_width,  #Height
+                xSize/50.,  #Height
                 color = 'black'
                 )
               )
             ax.add_patch(patches.Rectangle(
-                (0.,xSize-wall_width), #xLoc,yLoc
+                (0.,xSize-xSize/50.), #xLoc,yLoc
                 ySize,  #Width
-                wall_width,  #Height
+                xSize/50.,  #Height
                 color = 'black'
                 )
               )

@@ -1,33 +1,33 @@
 def get_CUDA(dimensions, vectorSize, timesteps = [1], positions = [0], widths = [1.], func = "1./cosh", smooth = False, Measured = True, **kwargs):
-	potentialString = """potentialU = 0.;
+	potentialString = """measurementAmp = 0.;
 	  if ( ((alpha/2)<=(x_measured+delta_x) && (alpha/2)>=(x_measured-delta_x)) || ((beta/2)<=(x_measured+delta_x) && (beta/2)>=(x_measured-delta_x))){
-	    potentialU = 1.;
+	    measurementAmp = 1.;
 	  }"""
 	if Measured:
 		if smooth:
 			potentialString = """if (delta_x == 0){
-			delta_x = 1;
-		}
-		dcmplx potentialU = """ + func + """(((double)alpha/2.-(double)x_measured)/((double)delta_x)) + """ + func + """(((double)beta/2.-(double)x_measured)/((double)delta_x));"""
+				delta_x = 1;
+			}
+			measurementAmp = 0.5*""" + func + """(((double)alpha/2.-x_measured)/(delta_x)) + 0.5*""" + func + """(((double)beta/2.-x_measured)/(delta_x));"""
 	else:
-		potentialString = """potentialU = 1.;
+		potentialString = """measurementAmp = 1.;
 		  if ( ((alpha/2)<=(x_measured+delta_x) && (alpha/2)>=(x_measured-delta_x)) || ((beta/2)<=(x_measured+delta_x) && (beta/2)>=(x_measured-delta_x))){
-		    potentialU = 0.;
+		    measurementAmp = 0.;
 		  }"""
 		if smooth:
 			potentialString = """if (delta_x == 0){
 			delta_x = 1;
-		}
-		potentialU = 1 - """ + func + """(((double)alpha/2.-(double)x_measured)/((double)delta_x)) - """ + func + """(((double)beta/2.-(double)x_measured)/((double)delta_x));"""
+			}
+			measurementAmp = 1 - 0.5*""" + func + """(((double)alpha/2.-x_measured)/(delta_x)) - 0.5*""" + func + """(((double)beta/2.-x_measured)/(delta_x));"""
 	measureString = ""
 	for measurement in xrange(len(timesteps)):
 		measureString += ''' if (time_step == ''' + str(int(timesteps[measurement])) + '''){
-			x_measured = ''' + str(int(positions[measurement])) + ''';
-			delta_x = ''' + str(int(widths[measurement])) + ''';
+			x_measured = ''' + str(positions[measurement]) + ''';
+			delta_x = ''' + str(widths[measurement]) + ''';
 			''' + potentialString + '''
 			
 			for (n=0; n<vectorSize; n=n+1){
-				field = Mul(potentialU,QFieldCopy[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize]);
+				field = Mul(measurementAmp,QFieldCopy[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize]);
 				QField[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize] = field;
 				QFieldCopy[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize] = field;
 			} 
@@ -52,9 +52,9 @@ def get_CUDA(dimensions, vectorSize, timesteps = [1], positions = [0], widths = 
 	index_pair iToNum = index_to_number(Qx, x + deviceNum*local_xSize);
 	int alpha = iToNum.index0;
 	int beta = iToNum.index1;
-	int x_measured = 0;
-	int delta_x = 0;
+	double x_measured = 0;
+	double delta_x = 0;
 	double this_x = (double)(x + deviceNum*local_xSize);
-	dcmplx potentialU = 0.;
+	dcmplx measurementAmp = 0.;
 	'''+ measureString +'''
 }'''

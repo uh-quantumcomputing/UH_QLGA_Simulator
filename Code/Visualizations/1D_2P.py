@@ -191,7 +191,7 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
             for x in xrange(xSize):
                 exp_val += x*RhoFieldProjected[x].real
         else:
-            for x in xrange(int(exp_range[0]*xSize),int(exp_range[1]*xSize),1):
+            for x in xrange(int(exp_range[0]),int(exp_range[1]),1):
                 exp_val += x*RhoFieldProjected[x].real
         if time==0:
             expectationArray = np.asarray([exp_val])
