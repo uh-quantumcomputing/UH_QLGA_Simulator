@@ -1,13 +1,11 @@
 import Code.Simulations.SimulationHelper as sim
 import sys
-
 run_type = sys.argv[1]
 meta_data = ''
 for i in xrange(2, len(sys.argv)):
 	meta_data = meta_data + sys.argv[i] + ' '
 meta_data = meta_data[:-1]
 ############################################################################
-
 sim.load_global_vars(meta_data)
 
 def run():

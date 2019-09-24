@@ -14,10 +14,34 @@ def get_end_q_pole(y_shift, z_shift):
         dcmplx phase_velocity3 = exp(dcmplx(0., arg2/(double(zSize))));
         dcmplx phase_velocity = Mul3(phase_velocity1, phase_velocity2, phase_velocity3);
         result = Mul(phase_velocity, result);
-        QField[2*mf+((z + z_shift)%zSize)*vectorSize+((y + y_shift)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul3(half, (dcmplx) is_mf_empty[mf], result);
-        QField[2*mf+1+((z + z_shift)%zSize)*vectorSize+((y + y_shift)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul3(half, (dcmplx) is_mf_empty[mf], result);
+        QField[2*mf+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul(half, result);
+        QField[2*mf+1+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul(half, result);
       }
     }'''
+
+
+def get_end_second_q_pole(y_shift, z_shift):
+        return r'''
+        x_shift = 0;
+        y_shift = __double2int_rn(__dmul_rn(''' + str(y_shift) + r''', ySize));
+        z_shift = __double2int_rn(__dmul_rn(''' + str(z_shift) + r''', zSize));
+        double arg1 = __dmul_rn(__dmul_rn(2., pi), __dmul_rn(px, this_x));
+        double arg2 = __dmul_rn(__dmul_rn(2., pi), __dmul_rn(py, this_y));
+        double arg3 = __dmul_rn(__dmul_rn(2., pi), __dmul_rn(pz, this_z));
+        dcmplx phase_velocity1 = exp(dcmplx(0., arg1/(double(xSize))));
+        dcmplx phase_velocity2 = exp(dcmplx(0., arg2/(double(ySize))));
+        dcmplx phase_velocity3 = exp(dcmplx(0., arg2/(double(zSize))));
+        dcmplx phase_velocity = Mul3(phase_velocity1, phase_velocity2, phase_velocity3);
+        result = Mul(phase_velocity, result);
+        QField[2*mf+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] *= Mul(half, result);
+        QField[2*mf+1+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] *= Mul(half, result);
+      }
+    }'''
+
+        # QField[2*mf+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul(Mul(half, (dcmplx) is_mf_empty[mf]), Mul(result, 
+        # QField[2*mf+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize]));
+        # QField[2*mf+1+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul(Mul(half, (dcmplx) is_mf_empty[mf]), Mul(result, 
+        # QField[2*mf+1+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize]));
 
 
 def get_preamble(scaling):
@@ -36,6 +60,8 @@ def get_preamble(scaling):
   int x_shift = 0;
   int y_shift = 0;
   int z_shift = 0;
+  int lr_shift = 0;
+  int ud_shift = 0;
   double x_center = __dmul_rn(double(xSize), 1./2.);
   double y_center = __dmul_rn(double(ySize), 1./2.);
   double z_center = __dmul_rn(double(zSize), 1./2.);
@@ -45,7 +71,7 @@ def get_preamble(scaling):
   dcmplx scaling = ''' + str(scaling) + r''';
   double A = scaling.real()/256.;
   double AA = __dmul_rn(A, A); 
-  int square_size = 9;
+  int square_size = 21;
   x_center = 0.;
   y_center = 0.;
   z_center = 0.;
@@ -68,7 +94,7 @@ def make_CUDA_mf_aray(mf_array):
 
 
 
-def get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array,  separation, px, py, pz):
+def get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array,  separation, px, py, pz, lr_shift, ud_shift):
   return r''' 
   separation = __dmul_rn(''' + str(separation) + r''', xSize);
   px = ''' + str(px) + r''';
@@ -77,6 +103,8 @@ def get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array,  separation, px, py, 
   a1 = ''' + str(a1) + r''';
   a2 = ''' + str(a2) + r''';
   b1 = ''' + str(b1) + r'''; 
+  lr_shift = ''' + str(lr_shift) + r'''; 
+  ud_shift = ''' + str(ud_shift) + r'''; 
   ''' + make_CUDA_mf_aray(mf_array) + r'''
   for (int mf = 0; mf < spinComps; mf ++){
     dcmplx result(1., 0.);
@@ -85,8 +113,8 @@ def get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array,  separation, px, py, 
         for (int j = 0; j < square_size; j ++){
           int adjusted_i = i - square_size/2;
           int adjusted_j = j - square_size/2;
-          double x_center_new = x_center + double(adjusted_i * (xSize));
-          double y_center_new = y_center + double(adjusted_j * (ySize));
+          double x_center_new = x_center + lr_shift + double(adjusted_i * (xSize));
+          double y_center_new = y_center + ud_shift + double(adjusted_j * (ySize));
           for (int q = -1; q <2 ; q +=2){
             for (int p = -1; p <2 ; p +=2){
             double x_center_pole = x_center_new + double(q)*separation;
@@ -114,20 +142,34 @@ def rotate_poles(string, orientation):
     string = string.replace("xSize", "zSize")
   return string
 
-def get_q_poles(G0, G1, G2, MU, solution, orientation, separation, px, py, pz, y_shift, z_shift):
+def get_q_poles(G0, G1, G2, MU, solution, orientation, separation, px, py, pz, y_shift, z_shift,  lr_shift, ud_shift):
   a1, a2, b1 = pade.get_pade_quad(G0, G1, G2, MU, solution)
   mf_array = np.asarray(pade.get_mfs(solution), dtype = np.int_)
-  z_poles = get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array, separation, px, py, pz)
+  z_poles = get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array, separation, px, py, pz,  lr_shift, ud_shift)
   rotated_poles = rotate_poles(z_poles, orientation)
   q_poles = rotated_poles + get_end_q_pole(y_shift, z_shift)
   return q_poles
 
+def get_second_q_poles(G0, G1, G2, MU, solution, orientation, separation, px, py, pz, y_shift, z_shift, lr_shift, ud_shift):
+  print "2 identical solutions were used"
+  a1, a2, b1 = pade.get_pade_quad(G0, G1, G2, MU, solution)
+  mf_array = np.asarray(pade.get_mfs(solution), dtype = np.int_)
+  z_poles = get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array, separation, px, py, pz, lr_shift, ud_shift)
+  rotated_poles = rotate_poles(z_poles, orientation)
+  q_poles = rotated_poles + get_end_second_q_pole(y_shift, z_shift)
+  return q_poles
+
+
 def get_CUDA(vectorSize = 10, G0 = 1., G1 = .1, G2 = 1., MU = 1., scaling = 50., 
             solution1 = 1, solution2 = 0, p1x = 0., p1y = 0., p1z = 0., p2x = 0., p2y = 0., p2z = 0.,
             y_shift1 = 0., z_shift1 = 0., y_shift2 = 0., z_shift2 = 0.,
+            lr_shift1 = 0., ud_shift1 = 0., lr_shift2 = 0., ud_shift2 = 0.,
             separation1 = 1./4., separation2 = 1./4., orientation1 = 'z', orientation2 = 'z', **kwargs):
   preamble = get_preamble(scaling)
-  first_q_poles = get_q_poles(G0, G1, G2, MU, solution1, orientation1, separation1, p1x, p1y, p1z, y_shift1, z_shift1)
-  second_q_poles = get_q_poles(G0, G1, G2, MU, solution2, orientation2, separation2, p2x, p2y, p2z, y_shift2, z_shift2)
+  first_q_poles = get_q_poles(G0, G1, G2, MU, solution1, orientation1, separation1, p1x, p1y, p1z, y_shift1, z_shift1, lr_shift1, ud_shift1)
+  if (solution1 == solution2):
+    second_q_poles = get_second_q_poles(G0, G1, G2, MU, solution2, orientation2, separation2, p2x, p2y, p2z, y_shift2, z_shift2, lr_shift2, ud_shift2)
+  else:
+    second_q_poles = get_q_poles(G0, G1, G2, MU, solution2, orientation2, separation2, p2x, p2y, p2z, y_shift2, z_shift2, lr_shift2, ud_shift2)
   return preamble+first_q_poles+second_q_poles+r'''}'''
 
