@@ -93,6 +93,10 @@ __device__ int nearest_pole_center(int this_x, int xSize, int x_center){
   }
 }
 
+__device__ double gauss(double arg){
+    return exp(-arg*arg);
+}
+
 __device__  dcmplx expC (dcmplx z)
 {
     int cos_last_changed = 0;
