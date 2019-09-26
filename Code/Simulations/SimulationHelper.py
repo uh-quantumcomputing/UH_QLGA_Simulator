@@ -137,7 +137,7 @@ def load_global_vars(path):
   global global_vars
   global_vars = dd.io.load(path)
 
-def set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY, OVERWRITE, root_save_file = '/home/' + username + '/Desktop/Experiments'): 
+def set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY, OVERWRITE, root_save_file = '~/Quantum\ Lab/Experiments'):
   global global_vars
   first_time = False
   global_vars["visualization"] = VISUALIZATION

@@ -16,18 +16,18 @@ FRAME_SIZE = 20
 NUM_FRAMES = 30
 
 
-Lx = 256 # Parameter to scale lattice size along x
-Ly = 256 # Parameter to scale lattice size along y
-Lz = 256 # Parameter to scale lattice size along z
+Lx = 512 # Parameter to scale lattice size along x
+Ly = 512 # Parameter to scale lattice size along y
+Lz = 1 # Parameter to scale lattice size along z
 
 
-BATCH = 'Quadrupole Test'
-RUN ='test24_sol2_sol_4'
+BATCH = 'HPC_Testing_Phase_Initial_First_Time_Test_RUN'
+RUN ='charlie_alpha_beta_test'
 
 
 
 
-DEVICES = [0,1] # References to devices to use
+DEVICES = [0] # References to devices to use
 
 
 ######################################################################################
@@ -38,10 +38,11 @@ DEVICES = [0,1] # References to devices to use
 ############################# INITIAL CONDITIONS #####################################
 
 
-#INIT = "gaussians_2P_1D"
+# INIT = "gaussians_2P_1D"
+# INIT = 'double_quadrupole_3d'
 INIT = 'double_quadrupole_3d'
-#INIT = 'double_quadrupole'
-#INIT = 'pade_quadrupole'
+# INIT = 'double_quadrupole'
+# INIT = 'pade_quadrupole'
 
 
 ############################ SIMULATION PHYSICS MODEL ################################
@@ -56,7 +57,7 @@ MODEL = 'spin2_BEC'
 
 
 #EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 1} 
-EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 2, "solution2" : 4, "orientation1" : "x", "p1y" : 10, "orientation2" : "z", "y_shift2" : 1./16.} 
+EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 2}
 # EXP_KWARGS = {'momentums': [4.0, 0.0, 4.0, 0.0], 'shifts': [0.3, 0.7, 0.4, 0.8], 'sigmas': [0.025, 0.025, 0.25, 0.25]}
 ### 'cond_list': ['X1==X2', 'true'], 'func_list': ['0.', '(4.*pi)*(1./abs(X1-X2))'], coulomb
 
@@ -92,7 +93,7 @@ VISUALIZATION = 'total_density_isosurface'
 
 VIS_KWARGS = {"fps":6, "contour_percent" : [.001]}
 
-RUN_TYPE = "vis" # 'run' or 'vis'
+RUN_TYPE = "runNoVis" # 'run' or 'vis'
 
 
 meta_data = QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz, 
