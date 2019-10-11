@@ -100,7 +100,7 @@ def get_max(QuantumState, component, frames, directory):
 
 
 def get_mf_levels(directory, frames):
-  global mf_levels
+  global mf_levels, vectorSize
   QuantumState = np.load(directory.split("Frame")[0] + frames[-1])
   vectorSize = QuantumState.shape[3]
   for mf in xrange(vectorSize/2):

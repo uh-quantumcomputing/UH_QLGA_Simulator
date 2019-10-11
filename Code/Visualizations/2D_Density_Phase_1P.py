@@ -127,11 +127,12 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, add_ds_patches 
     #Ref below    
     time = int(frame_number)
     time_text = plt.suptitle(r'$\tau = $' + str(time), fontsize=14, horizontalalignment='center',verticalalignment='top')
-
+    print num_comps
 
     cases = np.arange(2*num_comps)
     for ax, case in zip(axs, cases):
         if case%2==0:
+            print ax
             im = ax.imshow(RhoFields[int(case/2)].real, extent=(np.amin(yAxis), np.amax(yAxis), np.amin(xAxis), np.amax(xAxis)), origin = 'lower',
                 alpha = 1.0, cmap=colorMapBlue, norm=colors.SymLogNorm(linthresh=lin_thresh*rhoMax,linscale=lin_scale,vmin=0.,vmax=rhoMax))
             putLabels(fig,ax,im,r'$y\ \ (\ell)$', r'$x\ \ (\ell)$', r'$\rho \ \ (\frac{1}{\ell^2})$')
