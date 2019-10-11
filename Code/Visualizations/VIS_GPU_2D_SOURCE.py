@@ -307,6 +307,44 @@ __global__ void getPlotDetailsMayavi(dcmplx *QField, dcmplx *rhoField, double *p
 
 }
 
+__global__ void getPlotDetailsMayavi_single_comp(dcmplx *QField, dcmplx *rhoField, double *phaseField, int *lattice)
+{
+  int xSize = lattice[0];
+  int ySize = lattice[2];
+  int zSize = lattice[4];
+  int comp = lattice[6];
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  int z = blockIdx.z * blockDim.z + threadIdx.z;
+  int n;
+  int vecSize = 2;
+  int comps = 1;
+  dcmplx phi[ 1 ];
+  dcmplx psi[ 2 ];
+  
+  dcmplx i(0.,1.);
+
+  phaseField[y+x*ySize] = 0;
+
+  for(n = 0; n < vecSize; n++){
+    psi[n] = QField[n+z*vecSize+y*vecSize*zSize+x*zSize*ySize*vecSize];
+  }
+
+  for(n = 0; n < comps; n++){
+    phi[n] = QField[2*n+z*vecSize+y*vecSize*zSize+x*zSize*ySize*vecSize]
+            +QField[2*n+1+z*vecSize+y*vecSize*zSize+x*zSize*ySize*vecSize];   
+  }
+  /* For Phase */
+  phaseField[y+x*ySize] = phase(phi[comp]);
+
+  while(phaseField[y+x*ySize] > 2.*pi){
+    phaseField[y+x*ySize] -= 2.*pi;
+  } 
+
+  rhoField[y+x*ySize] = psi[2*comp]*conj(psi[2*comp]) + psi[2*comp+1]*conj(psi[2*comp+1]);
+
+}
+
 
 __global__ void getPlotDetailsMayavi_three_d(dcmplx *QField, dcmplx *rhoField, double *phaseField, int *lattice)
 {
@@ -343,6 +381,7 @@ __global__ void getPlotDetailsMayavi_three_d(dcmplx *QField, dcmplx *rhoField, d
   rhoField[z+y*zSize+x*ySize*zSize] = psi[2*comp]*conj(psi[2*comp]) + psi[2*comp+1]*conj(psi[2*comp+1]);
 
 }
+
 
 
 __global__ void getPlotDetails(dcmplx *QField, dcmplx *vortField, dcmplx *rhoField, double *phaseField, dcmplx *VxField, dcmplx *VyField, int *lattice)

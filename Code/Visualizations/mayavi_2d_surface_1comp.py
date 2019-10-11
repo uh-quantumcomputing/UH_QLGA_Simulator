@@ -30,7 +30,7 @@ fig_myv = mlab.figure(size=(1200,1200),bgcolor=(1,1,1),fgcolor=(0.,0.,0.))
 mf_levels = []
 ######## CUDA Setup ##########
 gpuMagic = gpuVis.gpuSource
-getPlotDetails = gpuMagic.get_function("getPlotDetailsMayavi")
+getPlotDetails = gpuMagic.get_function("getPlotDetailsMayavi_single_comp")
 
 
 ######## Functions ##########
@@ -68,7 +68,7 @@ def plotComponent(data_dir, frame, image_dir, frames, mf, global_vars):
 	src.update()
 
 	#Build surface plot pipeline
-	warp = mlab.pipeline.warp_scalar(src, warp_scale = 50)
+	warp = mlab.pipeline.warp_scalar(src, warp_scale = 150)
 	normals = mlab.pipeline.poly_data_normals(warp)
 	active_attr = mlab.pipeline.set_active_attribute(normals,point_scalars='color')
 	surf = mlab.pipeline.surface(active_attr,colormap='hsv',vmin=0.,vmax=2.*np.pi)
