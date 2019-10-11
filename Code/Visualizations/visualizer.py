@@ -10,6 +10,7 @@ from importlib import import_module
 
 class visualizer:
 	def __init__(self, technique, global_vars, **kwargs):
+		print("here")
 		self.global_vars = global_vars
 		self.technique = technique
 		self.directory_name = global_vars["base_directory_name"]
@@ -36,7 +37,6 @@ class visualizer:
 
 	def get_frames(self):
 		arr = os.listdir(self.directory_name + "Data/")
-		print arr
 		arr_new = [x for x in arr if x not in self.already_visualized]
 		arr_new.sort()
 		return arr_new
