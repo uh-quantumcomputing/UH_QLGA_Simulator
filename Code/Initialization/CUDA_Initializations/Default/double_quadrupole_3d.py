@@ -38,11 +38,6 @@ def get_end_second_q_pole(y_shift, z_shift):
       }
     }'''
 
-        # QField[2*mf+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul(Mul(half, (dcmplx) is_mf_empty[mf]), Mul(result, 
-        # QField[2*mf+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize]));
-        # QField[2*mf+1+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize] = Mul(Mul(half, (dcmplx) is_mf_empty[mf]), Mul(result, 
-        # QField[2*mf+1+((z + z_shift+zSize)%zSize)*vectorSize+((y + y_shift+ySize)%ySize)*vectorSize*zSize+((x + x_shift)%xSize)*zSize*ySize*vectorSize]));
-
 
 def get_preamble(scaling):
   return r''' 
@@ -83,13 +78,13 @@ def get_preamble(scaling):
   double a1 = 0.;
   double a2 = 0.;
   double b1 = 0.; 
-  int is_mf_empty[5] = {0, 0, 0, 0, 0};'''
+  double is_mf_empty[5] = {0, 0, 0, 0, 0};'''
 
 
 def make_CUDA_mf_aray(mf_array):
   string =''''''
   for i in xrange(len(mf_array)):
-    string = string + r'''is_mf_empty[''' + str(i) + r'''] = ''' + str(int(mf_array[i])) + r''';'''
+    string = string + r'''is_mf_empty[''' + str(i) + r'''] = ''' + str(mf_array[i]) + r''';'''
   return string
 
 
@@ -108,7 +103,7 @@ def get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array,  separation, px, py, 
   ''' + make_CUDA_mf_aray(mf_array) + r'''
   for (int mf = 0; mf < spinComps; mf ++){
     dcmplx result(1., 0.);
-    if (is_mf_empty[mf] > 0) {
+    if (is_mf_empty[mf] > 0.) {
       for (int i = 0; i < square_size; i ++){
         for (int j = 0; j < square_size; j ++){
           int adjusted_i = i - square_size/2;
@@ -125,6 +120,7 @@ def get_quadrupoles_in_z_orientation(a1, a2, b1, mf_array,  separation, px, py, 
             double local_phase = __dmul_rn(1.0, phase(dcmplx(this_x -  x_center_pole, this_y - y_center_pole)));
             double phase_sign = double(q*p);
             result =  Mul3(result, dcmplx(mag, 0.), exp(dcmplx(0., __dmul_rn(phase_sign, local_phase))));
+            result = Mul(result, dcmplx (is_mf_empty[mf], 0.));
           }
         }
       }

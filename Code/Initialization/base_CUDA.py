@@ -42,6 +42,11 @@ __device__  double phase (dcmplx z)
 
 }
 
+__device__  double magnitude (dcmplx z)
+{   
+    return sqrt(Mul(z, conj(z)).real());
+}
+
 __device__ index_pair index_to_number(int Q, int i){
   int n = Q - 1;
   while (i>=0){

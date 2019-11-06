@@ -31,6 +31,7 @@ mf_levels = []
 ######## CUDA Setup ##########
 gpuMagic = gpuVis.gpuSource
 getPlotDetails = gpuMagic.get_function("getPlotDetailsMayavi")
+getTotalDensity = gpuMagic.get_function("getPlotDetailsMayaviTotal")
 
 
 ######## Functions ##########
@@ -56,9 +57,35 @@ def setComponent(data_dir, mf, global_vars):
 	gpuRhoField.free()
 	gpuLattice.free()
 
+def setTotalDensity(data_dir, mf, global_vars):
+	global RhoField, PhaseField, xSize
+	blockX, blockY, blockZ = global_vars["blockX"], global_vars["blockY"], global_vars["blockZ"]
+	gridX, gridY, gridZ = global_vars["gridX"] * global_vars["num_GPUs"], global_vars["gridY"], global_vars["gridZ"]
+	QuantumState = np.load(data_dir)
+	xSize, ySize, zSize = QuantumState.shape[0], QuantumState.shape[1], QuantumState.shape[2]
+	Lattice[0],  Lattice[1], Lattice[2], Lattice[3]= xSize, ySize, zSize, mf
+	RhoField =   np.zeros((xSize, ySize), dtype = DTYPE)
+	PhaseField =   np.zeros((xSize, ySize), dtype = np.float64)
+	gpuQuantumState = drv.to_device(QuantumState)
+	gpuPhaseField = drv.to_device(PhaseField)
+	gpuRhoField = drv.to_device(RhoField)
+	gpuLattice = drv.to_device(Lattice)
+	getTotalDensity(gpuQuantumState, gpuRhoField, gpuPhaseField, gpuLattice, 
+                block=(blockX,blockY,blockZ), grid=(gridX,gridY))
+	RhoField = drv.from_device(gpuRhoField, RhoField.shape, DTYPE)
+	PhaseField = drv.from_device(gpuPhaseField, PhaseField.shape, np.float64)
+	gpuQuantumState.free()
+	gpuPhaseField.free()
+	gpuRhoField.free()
+	gpuLattice.free()
+
 # ANIMATE THE FIGURE WITH MOVIEPY, WRITE AN ANIMATED GIF
-def plotComponent(data_dir, frame, image_dir, frames, mf, global_vars):
-	setComponent(data_dir, mf, global_vars)
+def plotComponent(data_dir, frame, image_dir, frames, mf, global_vars, total_density):
+	if not total_density:
+		setComponent(data_dir, mf, global_vars)
+	else:
+		print("YANG GANG")
+		setTotalDensity(data_dir, mf, global_vars)
 	src = mlab.pipeline.array2d_source(RhoField.real)
 
 	# Add the additional scalar information 'w', for color map data
@@ -108,13 +135,13 @@ def get_mf_levels(directory, frames):
       print("Found a non-zero field in mf = " + str(2 - mf))
       mf_levels.append(mf)
 
-def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, **kwargs):
+def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max = False, total_density = False, **kwargs):
 	global mf_levels
 	if frame == "Frame_00000000.npy":
 		get_mf_levels(frame_dir, frames)
 	if find_total_max == True:
 		for mf in mf_levels:
 		 	frameMax(directory, mf) 
-  	for mf in mf_levels:
-  		print('Plotting Component ', mf, ' for frame ', frame)
-  		plotComponent(frame_dir, frame, image_dir, frames, mf, global_vars)
+	for mf in mf_levels:
+		plotComponent(frame_dir, frame, image_dir, frames, mf, global_vars, total_density)
+

@@ -346,6 +346,52 @@ __global__ void getPlotDetailsMayavi_single_comp(dcmplx *QField, dcmplx *rhoFiel
 }
 
 
+__global__ void getPlotDetailsMayaviTotal(dcmplx *QField, dcmplx *rhoField, double *phaseField, int *lattice)
+{
+  int xSize = lattice[0];
+  int ySize = lattice[2];
+  int zSize = lattice[4];
+  int comp = lattice[6];
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  int z = blockIdx.z * blockDim.z + threadIdx.z;
+  int n;
+  dcmplx phi[ spinComps ];
+  dcmplx psi[ vectorSize ];
+  
+  dcmplx i(0.,1.);
+
+  phaseField[y+x*ySize] = 0.;
+  if (z == 0){
+  for(n = 0; n < vectorSize; n++){
+    psi[n] = QField[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize];
+  }
+
+  for(n = 0; n < spinComps; n++){
+    phi[n] = QField[2*n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize]
+            +QField[2*n+1+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize];   
+  }
+  /* For Phase */
+  for(n = 0; n < spinComps; n++){
+    phaseField[y+x*ySize] += phase(phi[n]);
+  }
+
+  while(phaseField[y+x*ySize] > 2.*pi){
+    phaseField[y+x*ySize] -= 2.*pi;
+  } 
+  rhoField[y+x*ySize] = dcmplx(0., 0.);
+  for(n = 0; n < spinComps; n++){
+    rhoField[y+x*ySize] += phi[n]*conj(phi[n]);
+  }
+  }
+}
+
+
+
+
+
+
+
 __global__ void getPlotDetailsMayavi_three_d(dcmplx *QField, dcmplx *rhoField, double *phaseField, int *lattice)
 {
   int xSize = lattice[0];
