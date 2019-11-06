@@ -11,6 +11,13 @@ struct index_pair {
     int index1;
 };
 
+struct index_quad {
+  int index0;
+  int index1;
+  int index2;
+  int index3;
+};
+
 const int spinComps = 1;
 const double pi = 3.14159265358979323846264338328;
 
@@ -41,6 +48,10 @@ __device__ index_pair numbers_to_positions(int Q, int alpha, int beta){
   int x1 = alpha/2;
   int x2 = beta/2;
   return {x1,x2}; //position
+}
+
+__device__ index_quad num_to2d_num(int Qx, int alpha, int beta){
+  return {alpha%Qx,alpha/(Qx),beta%Qx,beta/(Qx)};
 }
 
 
@@ -164,6 +175,58 @@ __global__ void getRho_projected(double *QF_x1_x2_real, double *QF_x1_x2_imag, d
   atomicAdd(&QF_projected_real[x], rho);
 
 }
+
+__global__ void getQS_r1_r2_2d(dcmplx *QField, double *QF_r1_r2_real, double *QF_r1_r2_imag, int *lattice){
+  int xSize = lattice[0];
+  int ySize = lattice[2];
+  int zSize = lattice[4];
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  int z = blockIdx.z * blockDim.z + threadIdx.z;
+  int x_nSize = xSize*ySize*(2*xSize*ySize-1);
+  int n = 0;
+  index_pair iToNum = index_to_number(2*xSize*ySize, x);
+  int alpha = iToNum.index0;
+  int beta = iToNum.index1;
+  index_quad alphaBeta2d = num_to2d_num(2*xSize, alpha, beta);
+  int alpha_x = alphaBeta2d.index0;
+  int alpha_y = alphaBeta2d.index1;
+  int beta_x = alphaBeta2d.index2;
+  int beta_y = alphaBeta2d.index3;
+  //printf("ind=%d,alpha_x=%d,alpha_y=%d,beta_x=%d,beta_y=%d || ",x,alpha_x,alpha_y,beta_x,beta_y);
+  int x1 = alpha_x/2;
+  int y1 = alpha_y;
+  int x2 = beta_x/2;
+  int y2 = beta_y;
+  //printf("ind=%d,x1=%d,y1=%d,x2=%d,y2=%d || ",x,x1,y1,x2,y2);
+  //printf("4d ind = %d || ",y2+x2*ySize+y1*ySize*xSize+x1*ySize*ySize*xSize);
+
+  atomicAdd(&QF_r1_r2_real[y2+x2*ySize+y1*ySize*xSize+x1*ySize*xSize*ySize], 0.5*QField[x].real());
+  atomicAdd(&QF_r1_r2_imag[y2+x2*ySize+y1*ySize*xSize+x1*ySize*xSize*ySize], 0.5*QField[x].imag());
+  atomicAdd(&QF_r1_r2_real[y1+x1*ySize+y2*ySize*xSize+x2*ySize*xSize*ySize], -0.5*QField[x].real());
+  atomicAdd(&QF_r1_r2_imag[y1+x1*ySize+y2*ySize*xSize+x2*ySize*xSize*ySize], -0.5*QField[x].imag());
+
+  
+}
+
+__global__ void getRho_projected_2d(double *QF_r1_r2_real, double *QF_r1_r2_imag, double *rho_projected_real, int *lattice){
+  int xSize = lattice[0]; // Lx 
+  int ySize = lattice[2]; // Ly
+  int zSize = lattice[4];
+  int x = blockIdx.x * blockDim.x + threadIdx.x; //x2+x1*xSize
+  int y = blockIdx.y * blockDim.y + threadIdx.y; //y2+y1*ySize
+  int z = blockIdx.z * blockDim.z + threadIdx.z;
+  int x1 = x/xSize;
+  int x2 = x%xSize;
+  int y1 = y/ySize;
+  int y2 = y%ySize;
+
+  double rho = QF_r1_r2_real[y2+x2*ySize+y1*ySize*xSize+x1*ySize*ySize*xSize]*QF_r1_r2_real[y2+x2*ySize+y1*ySize*xSize+x1*ySize*ySize*xSize]
+              +QF_r1_r2_imag[y2+x2*ySize+y1*ySize*xSize+x1*ySize*ySize*xSize]*QF_r1_r2_imag[y2+x2*ySize+y1*ySize*xSize+x1*ySize*ySize*xSize];
+  atomicAdd(&rho_projected_real[y1+x1*ySize], rho);
+
+}
+
 
 __global__ void calcPurity(double *QF_x1_x2_real, double *QF_x1_x2_imag, double *purity, int *lattice){
   int xSize = lattice[0]; // x1 

@@ -47,9 +47,11 @@ def getSimulationParams1P3D(Lx, Ly, Lz):
 
 
 def getSimulationParams2P1D(Lx, Ly, Lz, num_GPUs):
-  xSize, ySize, zSize, blockX, blockY, blockZ, gridX, gridY, gridZ, Qx, Qy, Qz = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+  xSize, ySize, zSize, blockX, blockY, blockZ, gridX, gridY, gridZ, Qx, Qy, Qz = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2
   Nx = 1
-  blockX = 64
+  blockX = 128
+  if Lx<blockX:
+    blockX = Lx
   Qx = 2*blockX*num_GPUs*Nx 
   while Qx<2*Lx:
     Nx += 1
@@ -60,21 +62,19 @@ def getSimulationParams2P1D(Lx, Ly, Lz, num_GPUs):
 
 def getSimulationParams2P2D(Lx, Ly, Lz, num_GPUs):
   xSize, ySize, zSize, blockX, blockY, blockZ, gridX, gridY, gridZ, Qx, Qy, Qz = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-  Nx, Ny = 1, 1
-  blockX = 8
-  blockY = 8
-  Qx = 2*blockX*num_GPUs*Nx
-  Qy = 2*blockY*Ny
+  Nx = 1
+  blockX = 32
+  if Lx<blockX:
+    blockX = Lx
+  Qx = 2*blockX*num_GPUs*Nx 
   while Qx<2*Lx:
     Nx += 1
     Qx = 2*blockX*num_GPUs*Nx
-  while Qy<2*Ly:
-    Ny += 1
-    Qy = 2*blockY*Ny
-  gridX = Nx*(Qx-1)
-  gridY = Ny*(Qy-1)
+  Qy = 2*Ly
+  gridX = Nx*(Qx*Ly-1)*Ly
   xSize, ySize, zSize = blockX*gridX, blockY*gridY, blockZ*gridZ
   return xSize, ySize, zSize, blockX, blockY, blockZ, gridX, gridY, gridZ, Qx, Qy, Qz
+
 
 def getSimulationParams2P3D(Lx, Ly, Lz, num_GPUs):
   xSize, ySize, zSize, blockX, blockY, blockZ, gridX, gridY, gridZ, Qx, Qy, Qz = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
