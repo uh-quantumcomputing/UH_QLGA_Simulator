@@ -12,6 +12,13 @@ struct index_pair {
   int index1;
 };
 
+struct index_quad {
+  int index0;
+  int index1;
+  int index2;
+  int index3;
+};
+
 __device__  dcmplx Mul (dcmplx u, dcmplx z)
 { 
     return dcmplx(__dmul_rn(u.real(), z.real()) - __dmul_rn(u.imag(), z.imag()), __dmul_rn(u.real(), z.imag()) + __dmul_rn(u.imag(), z.real()));    
@@ -66,6 +73,14 @@ __device__ int number_to_index(int Q, int alpha, int beta){
     n -= 1;
   }
   return i+beta-(alpha+1); //index
+}
+
+__device__ index_quad num_to2d_num(int Qx, int alpha, int beta){
+  return {alpha%Qx,alpha/(Qx),beta%Qx,beta/(Qx)};
+}
+
+__device__ int index_from2d_num(int Qx, int Ly, int alpha_x, int beta_x,int alpha_y, int beta_y){
+  return number_to_index(Qx*Ly, alpha_y*Qx+alpha_x, beta_y*Qx+beta_x);
 }
 
 __device__ dcmplx switch_phase_1 (dcmplx z){
@@ -173,6 +188,36 @@ __device__ double sign(double x){
   }
 }
 
+__device__ double jumpsToNeighbor(int dim, int alpha, int beta){
+  if (dim==0){
+    if (beta==(alpha+1) && alpha%2==0){return -1.;} else {return 1.;}
+  } else {
+    if (beta==alpha){return -1.;} else {return 1.;}
+  }
+}
+
+__device__ double jumpsFromNeighbor(int dim, int alpha, int beta){
+  if (dim==0){
+    if (beta==(alpha+1) && alpha%2==0){return -1.;} else {return 1.;}
+  } else {
+    if (beta==alpha){return -1.;} else {return 1.;}
+  }
+}
+
+
+__device__ double jumpsOverBoundary(int dim, int alpha, int beta, int alpha_new, int beta_new){
+  double sign = 1.;
+  if (dim==0){
+    if (abs((double)alpha-(double)alpha_new)>2.){sign = -sign;}
+    if (abs((double)beta-(double)beta_new)>2.){sign = -sign;}
+  } else {
+    if (abs((double)alpha-(double)alpha_new)>1.){sign = -sign;}
+    if (abs((double)beta-(double)beta_new)>1.){sign = -sign;}
+  }
+  return sign;
+} 
+
+
 __device__ double signFromStreamEpsilon(int n, int alpha, int beta, int Q, int direction){
   if (direction==1){ //Streaming 1s right
     if (alpha%2==n and beta%2==n){ //Both 1s streaming
@@ -198,6 +243,38 @@ __device__ double signFromStreamEpsilon(int n, int alpha, int beta, int Q, int d
     } else if (alpha%2==n and beta==alpha+1 and beta!=Q-1){ //Jumping
       return -1.;
     } else if (beta==Q-2+n and alpha!=0){ //Boundary jump
+      return -1.;
+    } else {
+      return 1.;
+    }
+  }
+}
+
+__device__ double signFromStreamEpsilonY(int n, int alpha_y, int beta_y, int alpha_x, int beta_x, int L, int direction){
+  if (direction==1){ //Streaming 1s right
+    if (alpha_x%2==n and beta_x%2==n){ //Both 1s streaming
+      if (alpha_y==0){
+        return -1.;
+      } else {
+        return 1.;
+      }
+    } else if (beta_x%2==n and beta_y==alpha_y+1 and beta_y!=1){ //Jumping
+      return -1.;
+    } else if (alpha_y==n and beta_y!=L-1){ //Boundary jump
+      return -1.;
+    } else {
+      return 1.;
+    }
+  } else { //Streaming 1s left
+    if (alpha_x%2==n and beta_x%2==n){ //Both 1s streaming
+      if (beta_y==L-1){
+        return -1.;
+      } else {
+        return 1.;
+      }
+    } else if (alpha_x%2==n and beta_y==alpha_y+1 and beta_y!=L-1){ //Jumping
+      return -1.;
+    } else if (beta_y==L-1 and alpha_y!=0){ //Boundary jump
       return -1.;
     } else {
       return 1.;

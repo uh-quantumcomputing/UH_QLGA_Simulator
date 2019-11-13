@@ -68,48 +68,40 @@ def STREAM_COLLIDE(gpu, num_GPUs, dimension, component):
 			gpu[i].stream("Neg", dimension, component, num_GPUs, gpu_field_copy_pointers)
 
 def STREAM_COLLIDE_MULTI(gpu, num_GPUs, dimension, component):
-	SET_COPY(gpu, num_GPUs)
-	#Collide
+	# SET_COPY(gpu, num_GPUs)
+	# #Collide
+	# for i in xrange(num_GPUs):
+	# 	SYNC(gpu, num_GPUs)
+	# 	gpu[i].collide_multi(dimension, num_GPUs, gpu_field_copy_pointers)
+	# SET_COPY(gpu, num_GPUs)
+	# Stream
 	for i in xrange(num_GPUs):
 		SYNC(gpu, num_GPUs)
-		gpu[i].collide_multi(dimension, num_GPUs, gpu_field_copy_pointers)
+		gpu[i].stream("Pos", dimension, component, num_GPUs, gpu_field_copy_pointers)
 	SET_COPY(gpu, num_GPUs)
-	#Stream
-	if dimension == "X":
-		for i in xrange(num_GPUs):
-			SYNC(gpu, num_GPUs)
-			gpu[i].stream("Pos", dimension, component, num_GPUs, gpu_field_copy_pointers)
-	else:
-		for i in xrange(num_GPUs):
-			gpu[i].stream("Pos", dimension, component, num_GPUs, gpu_field_copy_pointers)
-	SET_COPY(gpu, num_GPUs)
-	#Collide
-	for i in xrange(num_GPUs):
-		SYNC(gpu, num_GPUs)
-		gpu[i].collide_multi(dimension, num_GPUs, gpu_field_copy_pointers)
-	SET_COPY(gpu, num_GPUs)
-	#Stream
-	if dimension == "X":
-		for i in xrange(num_GPUs):
-			SYNC(gpu, num_GPUs)
-			gpu[i].stream("Neg", dimension, component, num_GPUs, gpu_field_copy_pointers)
-	else:
-		for i in xrange(num_GPUs):
-			gpu[i].stream("Neg", dimension, component, num_GPUs, gpu_field_copy_pointers)
+	# # Collide
+	# for i in xrange(num_GPUs):
+	# 	SYNC(gpu, num_GPUs)
+	# 	gpu[i].collide_multi(dimension, num_GPUs, gpu_field_copy_pointers)
+	# SET_COPY(gpu, num_GPUs)
+	# #Stream
+	# for i in xrange(num_GPUs):
+	# 	SYNC(gpu, num_GPUs)
+	# 	gpu[i].stream("Neg", dimension, component, num_GPUs, gpu_field_copy_pointers)
 
 def INTERNAL(gpu, num_GPUs):
     for i in xrange(num_GPUs):
-    	# SYNC(gpu, num_GPUs)
+    	SYNC(gpu, num_GPUs)
         gpu[i].internal_interaction()
 
 def EXTERNAL(gpu, num_GPUs):
     for i in xrange(num_GPUs):
-    	# SYNC(gpu, num_GPUs)
+    	SYNC(gpu, num_GPUs)
         gpu[i].external_interaction()
 
 def MEASUREMENT(gpu, num_GPUs):
     for i in xrange(num_GPUs):
-    	# SYNC(gpu, num_GPUs)
+    	SYNC(gpu, num_GPUs)
         gpu[i].measurement_interaction()
     
 def ONE_D_EVOLUTION(gpu, num_GPUs):
@@ -218,40 +210,40 @@ def ONE_D_EVOLUTION_MULTI(gpu, num_GPUs):
 
 
 def TWO_D_EVOLUTION_MULTI(gpu, num_GPUs):
-	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 0)
-	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
+	# STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 0)
+	# SET_COPY(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
+	# STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 0)
+	# SET_COPY(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
 	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "Y", 0)
 	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
-	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 1)
-	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
+	# STREAM_COLLIDE_MULTI(gpu, num_GPUs, "Y", 0)
+	# SET_COPY(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
+	######## Halfway ##########
 	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "Y", 1)
 	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
-	######### Halfway ##########
-	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "Y", 0)
-	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
-	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 0)
-	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
-	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "Y", 1)
-	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
-	STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 1)
-	SET_COPY(gpu, num_GPUs)
-	INTERNAL(gpu, num_GPUs)
-	EXTERNAL(gpu, num_GPUs)
-	MEASUREMENT(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
+	# STREAM_COLLIDE_MULTI(gpu, num_GPUs, "Y", 1)
+	# SET_COPY(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
+	# STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 1)
+	# SET_COPY(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
+	# STREAM_COLLIDE_MULTI(gpu, num_GPUs, "X", 1)
+	# SET_COPY(gpu, num_GPUs)
+	# INTERNAL(gpu, num_GPUs)
+	# EXTERNAL(gpu, num_GPUs)
+	# MEASUREMENT(gpu, num_GPUs)
 
 
 def THREE_D_EVOLUTION_MULTI(gpu, num_GPUs):

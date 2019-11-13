@@ -1,4 +1,4 @@
-def get_CUDA(dimensions, vectorSize, G0 = 1., G1 = 0.5, MU = -1., scaling = 1., **kwargs):
+def get_CUDA(dimensions, vectorSize, G0 = 1.5, G1 = -0.5, MU = -1., scaling = 1., **kwargs):
 	return r'''
 		__global__ void internal(dcmplx *QField, dcmplx *QField2, int* lattice, int* gpu_params)
 	{   
@@ -38,8 +38,8 @@ def get_CUDA(dimensions, vectorSize, G0 = 1., G1 = 0.5, MU = -1., scaling = 1., 
 	        }
 	    dcmplx rhoMinus = Mul(phi[0], conj(phi[0]));
 	    dcmplx rhoPlus = Mul(phi[1], conj(phi[1]));
-	    dcmplx NLPotPlus = exp(Mul3(-i, real(Mul(rhoPlus,g1)-Mul(rhoMinus,g0) + mu), tau));
-	    dcmplx NLPotMinus = exp(Mul3(-i, real(Mul(rhoMinus,g1)-Mul(rhoPlus,g0) + mu), tau));
+	    dcmplx NLPotPlus = exp(Mul3(-i, real(Mul(rhoPlus,g1)-Mul(rhoMinus,g0)), tau));
+	    dcmplx NLPotMinus = exp(Mul3(-i, real(Mul(rhoMinus,g1)-Mul(rhoPlus,g0)), tau));
 
 	    /*Apply operator*/
 

@@ -77,6 +77,8 @@ def make_frame(frame_dir, frame, image_dir, frames, global_vars, find_total_max 
     frame_number = (frame.split("_")[1]).split(".")[0]
     print "Plotting", frame_dir
     QuantumState = np.load(frame_dir)
+    # for i in xrange(len(QuantumState)):
+    #     print i, QuantumState[i,0,0,0]
     fig = plt.figure(figsize = (15,12))
     oldQuantumState = None
     oldQuantumState = QuantumState.copy()

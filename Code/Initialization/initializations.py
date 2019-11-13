@@ -128,12 +128,8 @@ class gpuObject:
 
 	def collide_multi(self, dim, num_GPUs, field_copy_pointers):
 		self.context.push()	
-		func_name = "collide" + dim
-		collide_field = self.gpuModelMagic.get_function(func_name)
-		if dim=="X":
-			exec(generate_shared_call(num_GPUs, stream=False), {"collide_field" : collide_field, "field_copy_pointers" : field_copy_pointers, "self" : self})
-		else:	
-			collide_field(self.QField, self.QFieldCopy, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
+		collide_field = self.gpuModelMagic.get_function("collide")
+		exec(generate_shared_call(num_GPUs, stream=False), {"collide_field" : collide_field, "field_copy_pointers" : field_copy_pointers, "self" : self})
 		self.context.pop()
 
 	def collide(self):
