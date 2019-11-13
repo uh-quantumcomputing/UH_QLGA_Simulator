@@ -326,3 +326,8 @@ __global__ void zeroFields(dcmplx *QField, dcmplx *QField2, int* lattice) {
 __global__ void incrementTime(int* lattice){
     lattice[14] += 1;
 }
+
+__device__ double step(double a, double x)
+{
+  return x >= a;
+}
