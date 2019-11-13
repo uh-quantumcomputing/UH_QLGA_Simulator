@@ -71,6 +71,20 @@ def get_mf_minus_two_zero_plus_two(mu, g0, g1, g2):
 			return True, a1, a2, b1 
 		return False, 0, 0, 0
 
+
+def get_mf_cyclic(mu, g0, g1, g2):
+		gamma = mu*mu*mu*mu*(361.*mu*mu - 32.*g0*(13.*mu + 16.*g0))
+		if gamma < 0.:
+			return False, 0., 0., 0.
+		gamma = np.sqrt(gamma)
+		#a1 = (-11.*mu*mu*mu*mu)/(4*(19*mu*mu*mu - 48*mu*mu*g0 + gamma))
+		a1 = (11.*mu*mu*mu*mu)/(4*(-19*mu*mu*mu + 48*mu*mu*g0 + gamma))
+		b1 = (5*mu*mu + a1*(64*g0 - 48*mu))/(48*(mu - 4*a1))
+		a2 = a1*(b1 - (mu/4.))
+		if a1 > 0. and b1 > 0. and a2 > 0. and b1 > a1: 
+			return True, a1, a2, b1 
+		return False, 0, 0, 0
+
 func_dict = {
 	0 : return_zeros,
 	1 : get_mf_two,
@@ -80,7 +94,9 @@ func_dict = {
 	5 : get_mf_two,
 	6 : get_mf_plus_minus,
 	7 : get_mf_plus_minus,
-	8 : get_mf_minus_two_zero_plus_two
+	8 : get_mf_minus_two_zero_plus_two,
+	9 : get_mf_cyclic
+
 }
 
 coefficient_dict = {
@@ -92,7 +108,8 @@ coefficient_dict = {
 	5 : [0., 0., 0., 0., 1.],
 	6 : [1., 0., 0., 0., 1.],
 	7 : [0., 1., 0., 1., 0.],
-	8 : [1., 0., 1., 0., 1.]
+	8 : [1., 0., 1., 0., 1.],
+	9 : [1., 0., np.sqrt(2.), 0., -1.]
 }
 
 

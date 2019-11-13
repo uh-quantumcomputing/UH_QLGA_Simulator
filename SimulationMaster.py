@@ -8,6 +8,7 @@ from types import ModuleType
 ######################################################################################
 #### LATTICE INFO ####
 # For particles >=2, (x,y,z) represents indices of number basis kets along each direction, ie. if xDim=L then XBLOCK*XGRID = L(2*L-1)
+
 PARTICLES = 2
 KINETIC_OPERATOR = 'S_2d'   # S for Schroedinger equation, D for Dirac ... 
 FRAME_SIZE = 1
@@ -23,6 +24,7 @@ BATCH = '2p_2d_test'
 RUN ='2d_test_31'
 
 
+
 DEVICES = [1] # References to devices to use
 
 
@@ -32,6 +34,7 @@ DEVICES = [1] # References to devices to use
 
 
 ############################# INITIAL CONDITIONS #####################################
+
 
 # INIT = 'function_1P'
 # INIT = 'gaussians_1P_1D'
@@ -44,6 +47,7 @@ INIT = "gaussians_2P_2D"
 # INIT = 'pade_quadrupole'
 
 
+
 ############################ SIMULATION PHYSICS MODEL ################################
 
 # MODEL = 'spin2_BEC'
@@ -54,7 +58,9 @@ MODEL = "No_Self_Interaction"
 
 
 
+
 ############################ EXPERIMENT KEYWORDS #####################################
+
 
 # EXP_KWARGS = {'dim2':1., 'scaling':3., 'coeffs':[1.,1.]}
 # EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 5, "orientation1" : "x"} 
@@ -68,11 +74,14 @@ sigma = (((c/(3.141592653589793238462643383279502884197)))**(1./4.))/float(Lx)
 # EXP_KWARGS = {'momentums': [0., 0.], 'shifts': [7./20., 13./20.], 'sigmas': [1./10.,1./10.]}
 EXP_KWARGS = {'shifts_y' : [0.5,0.5], 'sigmas_y' : [1000., 1000.],'shifts_x' : [0.35,0.65], 'sigmas_x' : [0.1, 0.1]}
 
+
 ###########################  EXTERNAL POTENTIAL #####################################
+
 
 POTENTIAL = "No_Potential"
 POTENTIAL_KWARGS = {}
 # POTENTIAL = "External_Function"
+
 # POTENTIAL_KWARGS = {"cond_list":["X1<Lx/7. && X2<Lx/7.", "(X1<Lx/7. && X2>Lx/7.) || (X1>Lx/7. && X2<Lx/7.)", "true"],"func_list" : ["(pi/10.)","(pi/20.)","0."]}
 # double trap 1d 2p
 # POTENTIAL_KWARGS = {'func_list': ['((pi/'+ str(c)+'))*((X1-Lx/4.)*(X1-Lx/4.)+(X2-Lx/4.)*(X2-Lx/4.))', '((pi/'+ str(c)+'))*((X1-3.*Lx/4.)*(X1-3.*Lx/4.)+(X2-3.*Lx/4.)*(X2-3.*Lx/4.))', '((pi/'+ str(c)+'))*((X1-Lx/4.)*(X1-Lx/4.)+(X2-3.*Lx/4.)*(X2-3.*Lx/4.))', '((pi/'+ str(c)+'))*((X1-3.*Lx/4.)*(X1-3.*Lx/4.)+(X2-Lx/4.)*(X2-Lx/4.))'], 'cond_list': ['X1<Lx/2. && X2<Lx/2.', 'X1>=Lx/2. && X2>=Lx/2.', 'X1<Lx/2. && X2>=Lx/2.', 'X1>=Lx/2. && X2<Lx/2.']}
@@ -116,10 +125,12 @@ MEASUREMENT_KWARGS = {}
 # VISUALIZATION = '2D_Density_Phase_1P'
 # VISUALIZATION = '1D_2P_density'
 # VISUALIZATION = 'mayavi_2d_surface_2comps'
+
 # VISUALIZATION = 'mayavi_3d_isosurface' 
-# VISUALIZATION = 'total_density_isosurface'
+VISUALIZATION = 'total_density_isosurface'
 # VISUALIZATION = 'colored_mf_isosurface'
 VISUALIZATION = '2D_2P_density'
+
 
 
 
@@ -134,6 +145,7 @@ VIS_KWARGS = {"fps":6, 'vid_fmt':'mp4','save_density':True}
 # 		RUN ='sols ' + str(i) + ', ' + str(j)
 # 		EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution1" : i,"solution2" : j, "orientation2" : "x", "y_shift2" : 1./4.} 
 # 		meta_data = QLGA.setup(PARTICLES, KINETIC_OPERATOR, FRAME_SIZE, NUM_FRAMES, Lx,  Ly, Lz, 
+
 # 								BATCH, RUN, DEVICES, INIT, MODEL, EXP_KWARGS, POTENTIAL, POTENTIAL_KWARGS,
 # 								VISUALIZATION, VIS_KWARGS, MEASUREMENT, MEASUREMENT_KWARGS,
 # 								RUN_TYPE, OVERWRITE = True)

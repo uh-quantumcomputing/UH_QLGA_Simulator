@@ -39,7 +39,6 @@ blue_lut = np.append(np.append(z, color), np.append(z, alpha)).reshape((4, 256))
 green_lut = np.append(np.append(z, z), np.append(color, alpha)).reshape((4, 256)).T
 white_lut = np.append(np.append(color, color), np.append(color, color)).reshape((4, 256)).T
 
-print red_lut[:, -1]
 
 
 ######## CUDA Setup ##########
@@ -88,16 +87,51 @@ def set_color_data(quantum_field):
 
 
 def set_rho(data_dir, global_vars, full):
-	scale = 1
+	scale = 2
 	if full:
 		scale = 1
 	xSize, ySize, zSize, vectorSize = global_vars["xSize"], global_vars["ySize"], global_vars["zSize"], global_vars["vectorSize"]
 	QuantumState = np.load(data_dir)
 	QuantumStateNew = QuantumState[:xSize/scale, :ySize/scale, :zSize/scale, :]
+	RhoFieldTest = np.zeros((xSize/scale, ySize/scale, zSize/scale), dtype = DTYPE)
 	RhoField = np.zeros((xSize/scale, ySize/scale, zSize/scale), dtype = DTYPE)
+	#QuantumStateNew[QuantumStateNew==0. + ] = 1.
+	#print QuantumState
+	# for mf in mf_levels:
+	# 	m = np.amax((QuantumStateNew[:, :, :, 2*mf] * QuantumStateNew[:, :, :, 2*mf].conjugate() + QuantumStateNew[:, :, :, 2*mf + 1] * QuantumStateNew[:, :, :, 2*mf +1].conjugate()).real)
+	# 	if m > 0:
+	# 		QuantumStateNew[:, :, :, 2*mf] = (1./m)*QuantumStateNew[:, :, :, 2*mf]
+	# 		QuantumStateNew[:, :, :, 2*mf + 1] = (1./m)*QuantumStateNew[:, :, :, 2*mf + 1]
+	# for mf in mf_levels:
+	# 	RhoField = RhoField*(QuantumStateNew[:, :, :, 2*mf] * QuantumStateNew[:, :, :, 2*mf].conjugate() + QuantumStateNew[:, :, :, 2*mf + 1] * QuantumStateNew[:, :, :, 2*mf +1].conjugate())
 	for mf in mf_levels:
-		RhoField = RhoField +   (QuantumStateNew[:, :, :, 2*mf] * QuantumStateNew[:, :, :, 2*mf].conjugate() + QuantumStateNew[:, :, :, 2*mf + 1] * QuantumStateNew[:, :, :, 2*mf +1].conjugate())*(
-								QuantumStateNew[:, :, :, -2*mf+9] * QuantumStateNew[:, :, :, -2*mf+9].conjugate() + QuantumStateNew[:, :, :, -2*mf + 8] * QuantumStateNew[:, :, :, -2*mf + 8].conjugate())				
+		RhoField += (QuantumStateNew[:, :, :, 2*mf] * QuantumStateNew[:, :, :, 2*mf].conjugate() + QuantumStateNew[:, :, :, 2*mf + 1] * QuantumStateNew[:, :, :, 2*mf +1].conjugate())
+
+	# for mf in mf_levels:
+	# 	QuantumStateNew[:, :, :, 2*mf] += np.ones(QuantumStateNew[:, :, :, 2*mf].shape) 
+	# 	QuantumStateNew[:, :, :, 2*mf + 1] += np.ones(QuantumStateNew[:, :, :, 2*mf + 1].shape)
+
+	# total = np.sum(RhoFieldTest)
+	# for mf in mf_levels:	
+	# 	if np.sum(QuantumStateNew[:, :, :, 2*mf] * QuantumStateNew[:, :, :, 2*mf].conjugate() + QuantumStateNew[:, :, :, 2*mf + 1] * QuantumStateNew[:, :, :, 2*mf +1].conjugate()) < .01 * total:
+	# 		QuantumStateNew[:, :, :, 2*mf] = np.ones(QuantumStateNew[:, :, :, 2*mf].shape)
+	# 		QuantumStateNew[:, :, :, 2*mf+1] = np.ones(QuantumStateNew[:, :, :, 2*mf+1].shape)
+	
+
+	# RhoField += ((QuantumStateNew[:, :, :, 0] * QuantumStateNew[:, :, :, 0].conjugate() + QuantumStateNew[:, :, :, 1] * QuantumStateNew[:, :, :, 1].conjugate())* 
+	# 			(QuantumStateNew[:, :, :, 8] * QuantumStateNew[:, :, :, 8].conjugate() + QuantumStateNew[:, :, :, 9] * QuantumStateNew[:, :, :, 9].conjugate())
+				# (QuantumStateNew[:, :, :, 4] * QuantumStateNew[:, :, :, 4].conjugate() + QuantumStateNew[:, :, :, 5] * QuantumStateNew[:, :, :, 5].conjugate())*
+				# (QuantumStateNew[:, :, :, 2] * QuantumStateNew[:, :, :, 2].conjugate() + QuantumStateNew[:, :, :, 3] * QuantumStateNew[:, :, :, 3].conjugate())*
+				# (QuantumStateNew[:, :, :, 6] * QuantumStateNew[:, :, :, 6].conjugate() + QuantumStateNew[:, :, :, 7] * QuantumStateNew[:, :, :, 7].conjugate()))	
+
+	# RhoField += ((QuantumStateNew[:, :, :, 2] * QuantumStateNew[:, :, :, 2].conjugate() + QuantumStateNew[:, :, :, 3] * QuantumStateNew[:, :, :, 3].conjugate())*
+	# 			(QuantumStateNew[:, :, :, 6] * QuantumStateNew[:, :, :, 6].conjugate() + QuantumStateNew[:, :, :, 7] * QuantumStateNew[:, :, :, 7].conjugate())
+	# 				)
+	# RhoField += ((QuantumStateNew[:, :, :, 4] * QuantumStateNew[:, :, :, 4].conjugate() + QuantumStateNew[:, :, :, 5] * QuantumStateNew[:, :, :, 5].conjugate())*
+	# 			(QuantumStateNew[:, :, :, 4] * QuantumStateNew[:, :, :, 4].conjugate() + QuantumStateNew[:, :, :, 5] * QuantumStateNew[:, :, :, 5].conjugate())
+	# 				)
+	print np.amax(RhoField)
+	print np.amin(RhoField)
 	r, g, b = set_color_data(QuantumStateNew)
 	return RhoField.real, r, g, b
 

@@ -8,6 +8,11 @@ meta_data = meta_data[:-1]
 ############################################################################
 sim.load_global_vars(meta_data)
 
+def runNoVis():
+	sim.init_GPU()
+	sim.simulate()
+
+
 def run():
 	sim.init_GPU()
 	sim.simulate()
