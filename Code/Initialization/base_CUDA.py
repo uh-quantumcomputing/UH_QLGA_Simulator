@@ -327,7 +327,7 @@ __global__ void incrementTime(int* lattice){
     lattice[14] += 1;
 }
 
-__device__ double step(double a, double x)
+__device__ double step(double x, double a)
 {
   return x >= a;
 }
