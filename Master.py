@@ -18,15 +18,20 @@ Lx = 128 # Parameter to scale lattice size along x
 Ly = 128 # Parameter to scale lattice size along y
 Lz = 128 # Parameter to scale lattice size along z
 
-
+## the following are directory names defined by the user
 BATCH = 'Multi_run_test'
 RUN ='sols 1, 3'
 
+
 DEVICES = [0,1] # References to devices to use
 
-
+##Visualization only for existing data
 VIS_ONLY = False
+
+## Animation only
 ANI_ONLY = False
+
+## Overwrite Existing files
 OVERWRITE = True
 ######################################################################################
 ########################## SIMULATION PARAMS END #####################################
@@ -52,9 +57,20 @@ MODEL = 'spin2_BEC'
 
 ############################ EXPERIMENT KEYWORDS #####################################
 
+# default keywords can be found in each file in the following directory
+# Code/Initialization/CUDA_Initializations/Default/ [initial condition name]
+# Values defined in each function declaration are the default values
+# if EXP_KWARGS below are defined they will be passed to overwrite the defaults
+# make a checkbox that can be used to input each value manually and overwrite defaults
+
+# where all kwargs are passed can be found defined in Code/Initialization/initializations.py lines 79-83
+# under compile_model_source function declaration
+
+# when using default values define an empty set
+# e.g. EXP_KWARGS = {}
 
 # EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 5, "solution1" : 5, "orientation1" : "x"} 
-EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution1" : 1,"solution2" : 3, "orientation2" : "x", "y_shift2" : 1./4.} 
+EXP_KWARGS = {'G0' : 1., 'G1' : .1, 'G2': 1., 'MU':1.,  'scaling' : 25, "solution1" : 1,"solution2" : 3, "orientation2" : "x", "y_shift2" : 1./4.}
 # EXP_KWARGS = {'momentums': [4.0, 0.0, 4.0, 0.0], 'shifts': [0.3, 0.7, 0.4, 0.8], 'sigmas': [0.025, 0.025, 0.25, 0.25]}
 ### 'cond_list': ['X1==X2', 'true'], 'func_list': ['0.', '(4.*pi)*(1./abs(X1-X2))'], coulomb
 
@@ -80,6 +96,11 @@ MEASUREMENT_KWARGS = {}
 
 ########################   VISUALIZATION TECHNIQUE #################################
 
+
+# define visualization based on the file names in directory
+# Code/Visualizations
+# *SOURCE files are not visualization methods
+
 # VISUALIZATION = '1D_1P'
 # VISUALIZATION = '1D_2P'
 # VISUALIZATION = 'mayavi_2d_surface'
@@ -87,9 +108,12 @@ MEASUREMENT_KWARGS = {}
 # VISUALIZATION = 'total_density_isosurface'
 VISUALIZATION = 'colored_mf_isosurface'
 
+# Visualization keyword arguments
 
 VIS_KWARGS = {"fps":6, "contour_percent" : [.25], 'characteristics' : False}
 
+
+# this loop is running multiple experiment sets of experiments
 
 for i in xrange(1, 8):
 	for j in xrange(i, 8):
