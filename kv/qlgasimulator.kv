@@ -1,0 +1,130 @@
+#:import Factory kivy.factory.Factory
+WindowManager:
+    SimulationParameters:
+    RunOptions:
+    PhysicsModeling:
+    KwargsOptions:
+
+
+<SimulationParameters>:
+    name: "simulationparameters"
+#    canvas.before:
+#        Color:
+#            rgb: .2, .2, .2
+#        Rectangle:
+#            size: self.size
+#            source: '/background.png'
+
+    numParticles: numParticles
+    kinOperator: kinOperator
+    frameSize: frameSize
+    numOfFrames: numOfFrames
+    lx: Lx
+    ly: Ly
+    lz: Lz
+
+
+    FloatLayout:
+        Label:
+            text: "[size=35dp][b]QLGA SIMULATOR[/b][/size]\n\n[size=20dp][b]Simulation Parameters[/b][/size]"
+            markup: True
+            size_hint: (0.75, 0.5)
+            pos_hint: {'center': (0.5, 0.75)}
+            halign: 'center'
+
+
+        Label:
+            text: "Number of Particles"
+            size_hint: (0.75, 0.5)
+            pos_hint: {'center': (0.15, 0.50)}
+
+
+        Spinner:
+            id: numParticles
+            size_hint: (0.2, 0.1)
+            pos_hint: {'center': (0.35, .5)}
+            text: 'Click to Select'
+            halign: 'center'
+            values: '1', '2'
+            on_text: root.particle_spinner_clicked(numParticles.text)
+
+        Label:
+            text: "Kinetic Operator"
+            size_hint: (0.75, 0.5)
+            pos_hint: {'center': (0.6, 0.50)}
+
+        Spinner:
+            id: kinOperator
+            size_hint: (0.2, 0.1)
+            pos_hint: {'center': (0.8, .5)}
+            text: 'Click to Select'
+            halign: 'center'
+            values: 'Shrodinger', 'Dirac'
+            on_text: root.kinetic_spinner_clicked(kinOperator.text)
+
+        Label:
+            text: "Frame Size: "
+            size_hint: (0.75, 0.5)
+            pos_hint: {'center': (0.25, 0.3)}
+
+        TextInput:
+            id: frameSize
+            multiline: False
+            size_hint: (0.10, 0.05)
+            pos_hint: {'center': (0.38, 0.3)}
+
+        Label:
+            text: "Number of Frames: "
+            size_hint: (0.75, 0.5)
+            pos_hint: {'center': (0.22, 0.2)}
+
+        TextInput:
+            id: numOfFrames
+            multiline: False
+            size_hint: (0.10, 0.05)
+            pos_hint: {'center': (0.38, 0.2)}
+
+        Label:
+            text: "Lx"
+            pos_hint: {'center': (0.55, 0.3)}
+
+        TextInput:
+            id: Lx
+            multiline: False
+            size_hint: (0.10, 0.05)
+            pos_hint: {'center': (0.65, 0.3)}
+
+        Label:
+            text: "Ly"
+            pos_hint: {'center': (0.55, 0.23)}
+
+
+        TextInput:
+            id: Ly
+            multiline: False
+            size_hint: (0.10, 0.05)
+            pos_hint: {'center': (0.65, 0.23)}
+
+        Label:
+            text: "Lz"
+            pos_hint: {'center': (0.55, 0.16)}
+
+
+        TextInput:
+            id: Lz
+            multiline: False
+            size_hint: (0.10, 0.05)
+            pos_hint: {'center': (0.65, 0.16)}
+
+
+        Button:
+            text: 'Next Page [b][size=15dp]->[/b][/size]'
+            markup:True
+            size_hint: (0.15, 0.05)
+            pos_hint: {'center': (0.85, 0.07)}
+            on_press: root.next_button()
+            on_release:
+                app.root.current = "runoptions"
+                root.manager.transition.direction = "left"
+
+
