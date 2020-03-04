@@ -8,10 +8,11 @@ from kivy.properties import ObjectProperty
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 
-
-outputArray = [0] * 22
+#todo rename output array to global variables with specific names
+outputArray = [0] * 20
 
 #todo delete debug print statements once outputs proven working
+#todo add tab functionality between input boxes
 #todo add export of previous run to text file and add option to reload last run
 #todo ADD error message/popup
 #todo delete ANI only and reformat to SIMULATIONMASTER.PY
@@ -93,8 +94,7 @@ class RunOptions(Screen):
 
     #set checkbox values to default as False (Unchecked)
     outputArray[19] = False
-    outputArray[20] = False
-    outputArray[21] = False
+
 
 
 #todo modfify GPU buttons to pull from device poll
@@ -112,14 +112,7 @@ class RunOptions(Screen):
         # else:
         #     print("Checkbox Unchecked")
 
-    def ani_click(self, instance, value):
-        if value is True:
-            RunOptions.ani = True
-            # print("Checkbox Checked")
-        else:
-            RunOptions.ani = False
-            # print("Checkbox Unchecked")
-
+#todo fix visOnly parameters to available options
     def visOnly_click(self, instance, value):
         if value is True:
             RunOptions.visOnly = 'run'
@@ -145,8 +138,6 @@ class RunOptions(Screen):
         outputArray[8] = self.runSolutions.text
         outputArray[9] = self.numGPUs
         outputArray[19] = self.visOnly
-        outputArray[20] = self.ani
-        outputArray[21] = self.overwrite
         # if self.ani:
         #     print("ANI is Selected")
         # else:
@@ -290,10 +281,10 @@ class KwargsOptions(Screen):
 class WindowManager(ScreenManager):
     pass
 
-Builder.load_file("kv/runoptions.kv")
-Builder.load_file("kv/physicsmodeling.kv")
-Builder.load_file("kv/kwargsoptions.kv")
-kv = Builder.load_file("kv/qlgasimulator.kv")
+Builder.load_file("screens/runoptions.kv")
+Builder.load_file("screens/physicsmodeling.kv")
+Builder.load_file("screens/kwargsoptions.kv")
+kv = Builder.load_file("screens/qlgasimulator.kv")
 
 
 class QLGASimulator(App):
