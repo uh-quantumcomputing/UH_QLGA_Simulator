@@ -23,7 +23,7 @@
             size_hint: (0.75, 0.5)
             pos_hint: {'center': (0.5, 0.75)}
             halign: 'center'
-#todo convert directory and name from textinput to directory finder
+#todo convert directory and name from text input to directory finder
         Label:
             text: "Experiment Directory: "
             pos_hint: {'center': (0.15, .5)}
@@ -95,6 +95,7 @@
             pos_hint:{'center': (0.75, 0.4)}
             group: "GPUS"
 
+#todo maybe change vis to option spinner
         Label:
             text: "Visualization Only"
             pos_hint: {'center': (0.38, 0.3)}
@@ -116,28 +117,27 @@
             pos_hint: {'center': (0.5, 0.3)}
             size_hint: (0.05,0.05)
 
-
-
-        Label:
-            text: "ANI Only"
-            pos_hint: {'center': (0.416, 0.25)}
-
-        CheckBox:
-            pos_hint: {'center': (0.2, 0.5)}
-            canvas.before:
-                Color:
-                    rgb: 30,35,38
-                Rectangle:
-                    pos:self.center_x-11, self.center_y-11
-                    size:[22,22]
-                Color:
-                    rgb: 0,0,0
-                Rectangle:
-                    pos:self.center_x-10, self.center_y-10
-                    size:[20,20]
-            on_active: root.ani_click(self, self.active)
-            pos_hint: {'center': (0.5, 0.25)}
-            size_hint: (0.05,0.05)
+#todo delete ANI only
+#        Label:
+#            text: "ANI Only"
+#            pos_hint: {'center': (0.416, 0.25)}
+#
+#        CheckBox:
+#            pos_hint: {'center': (0.2, 0.5)}
+#            canvas.before:
+#                Color:
+#                    rgb: 30,35,38
+#                Rectangle:
+#                    pos:self.center_x-11, self.center_y-11
+#                    size:[22,22]
+#                Color:
+#                    rgb: 0,0,0
+#                Rectangle:
+#                    pos:self.center_x-10, self.center_y-10
+#                    size:[20,20]
+#            on_active: root.ani_click(self, self.active)
+#            pos_hint: {'center': (0.5, 0.25)}
+#            size_hint: (0.05,0.05)
 
         Label:
             text: "Overwrite Previous Data"

@@ -1,8 +1,8 @@
-from __future__ import print_function 
-import setup as QLGA
-import os
-from types import ModuleType
-import subprocess
+# from __future__ import print_function
+# import setup as QLGA
+# import os
+# from types import ModuleType
+# import subprocess
 from kivy.app import App
 from kivy.properties import ObjectProperty
 from kivy.lang import Builder
@@ -13,7 +13,8 @@ outputArray = [0] * 22
 
 #todo delete debug print statements once outputs proven working
 #todo add export of previous run to text file and add option to reload last run
-#todo ADD logic for santization of user inputs (number only, bounds on values) and add error message/popup
+#todo ADD error message/popup
+#todo delete ANI only and reformat to SIMULATIONMASTER.PY
 
 
 class SimulationParameters(Screen):
@@ -300,27 +301,26 @@ class QLGASimulator(App):
         self.icon = 'ref/atom.png'
         return kv
 
-#todo finally test output
 
 if __name__ == "__main__":
 
-    def execute(cmd):
-        popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
-        for stdout_line in iter(popen.stdout.readline, ""):
-            yield stdout_line 
-        popen.stdout.close()
-        return_code = popen.wait()
-        if return_code:
-            raise subprocess.CalledProcessError(return_code, cmd)
+    # def execute(cmd):
+    #     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+    #     for stdout_line in iter(popen.stdout.readline, ""):
+    #         yield stdout_line
+    #     popen.stdout.close()
+    #     return_code = popen.wait()
+    #     if return_code:
+    #         raise subprocess.CalledProcessError(return_code, cmd)
 
     QLGASimulator().run()
     print(outputArray)
-    meta_data = QLGA.setup(outputArray[0],outputArray[1], outputArray[2], outputArray[3], outputArray[4], outputArray[5],  outputArray[6], outputArray[7],
-			outputArray[8], outputArray[9], outputArray[10], outputArray[11], outputArray[12], outputArray[13], outputArray[14], outputArray[15],
-			outputArray[16], outputArray[17], outputArray[18], outputArray[19], OVERWRITE = True)
-    for path in execute(["python", "AbstractionLayer.py", outputArray[19], meta_data]):
-        print(path)
-    # os.system("python SimulationMaster.py ")
+    # meta_data = QLGA.setup(outputArray[0],outputArray[1], outputArray[2], outputArray[3], outputArray[4], outputArray[5],  outputArray[6], outputArray[7],
+	# 		outputArray[8], outputArray[9], outputArray[10], outputArray[11], outputArray[12], outputArray[13], outputArray[14], outputArray[15],
+	# 		outputArray[16], outputArray[17], outputArray[18], outputArray[19], OVERWRITE = True)
+    # for path in execute(["python", "AbstractionLayer.py", outputArray[19], meta_data]):
+    #     print(path)
+
     print("Run Complete")
 
 
