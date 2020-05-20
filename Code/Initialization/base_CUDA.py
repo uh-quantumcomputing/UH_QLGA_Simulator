@@ -180,6 +180,13 @@ __device__ double get_r_squared(double x, double y, double x_center, double y_ce
   return (xx + yy);     
 }
 
+__device__ double get_r_squared_3d(double x, double y, double z, double x_center, double y_center, double z_center, double AA){   
+  double xx = __dmul_rn(__dmul_rn(x - x_center, x - x_center), AA);   
+  double yy = __dmul_rn(__dmul_rn(y - y_center, y - y_center), AA); 
+  double zz = __dmul_rn(__dmul_rn(z - z_center, z - z_center), AA);    
+  return (xx + yy + zz);     
+}
+
 __device__ double sign(double x){
   if (x>=0.){
     return 1.;
@@ -322,6 +329,8 @@ __global__ void zeroFields(dcmplx *QField, dcmplx *QField2, int* lattice) {
   }
     
 } 
+
+
 
 __global__ void incrementTime(int* lattice){
     lattice[14] += 1;

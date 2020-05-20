@@ -67,7 +67,9 @@ global_vars = {
 "measurement_kwargs" : None,
 "visualization" : None,
 "vis_kwargs" : None,
-"base_directory_name" : None
+"base_directory_name" : None,
+
+"save_vort" : None
 }
 
 '''
@@ -87,11 +89,12 @@ def set_size(Lx, Ly, Lz, PARTICLES, DEVICES):
   get_dimensions(Lx, Ly, Lz)
   set_lattice(Lx, Ly, Lz)
 
-def set_experiment(MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT, EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS, VIS_KWARGS):
+def set_experiment(MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT, SAVE_VORT, EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS, VIS_KWARGS):
   global global_vars
   global_vars["model"], global_vars["kinetic_operator"], global_vars["init"], global_vars["potential"], global_vars['measurement'] = MODEL, KINETIC_OPERATOR, INIT, POTENTIAL, MEASUREMENT
   global_vars["exp_kwargs"], global_vars["potential_kwargs"], global_vars["measurement_kwargs"], global_vars["vis_kwargs"] = EXP_KWARGS, POTENTIAL_KWARGS, MEASUREMENT_KWARGS, VIS_KWARGS
-  global_vars["vectorSize"] = modelSizes.sizes[MODEL+ "_" + str(global_vars["particle_number"]) + "P"]
+  global_vars["vectorSize"] = modelSizes.sizes[MODEL]
+  global_vars["save_vort"] = SAVE_VORT
 
 def set_runtime(FRAME_SIZE, NUM_FRAMES, TIME_STEP = 0):
   global global_vars
@@ -158,7 +161,7 @@ def set_directory(BATCH, RUN, VISUALIZATION, VIS_ONLY, OVERWRITE, root_save_file
       print("You may be overwriting previous experiments")
       continue_sim = give_overwrite_permission(base_directory_name)
   if continue_sim == "yes" or OVERWRITE:
-    if not (VIS_ONLY):
+    if not (VIS_ONLY or global_vars["time_step"] > 0):
       shutil.rmtree(base_directory_name + "Data/")
       os.makedirs(base_directory_name + "Data/")
     if os.path.exists(im_dir):
@@ -207,6 +210,25 @@ def init_GPU():
         gpu[j + 1].enableBoundaryAccess(gpu[(i)].context)
   save_and_print(global_vars["time_step"])
 
+def resume():
+  global gpu
+  xSize, ySize, zSize, vectorSize, num_GPUs = global_vars["xSize"], global_vars["ySize"], global_vars["zSize"], global_vars["vectorSize"], global_vars["num_GPUs"] 
+  if xSize%num_GPUs != 0:
+    print "xSize & blockX must be divisible by the number of GPUs... quiting"
+    quit()
+  QuantumState, gpu = [], []
+  loaded_file = np.load(global_vars["base_directory_name"] + "Data/" + "Frame_" + str('{:08d}'.format(global_vars["time_step"])) + ".npy")
+  for i in xrange(num_GPUs):
+    QuantumState.append(loaded_file[(xSize/num_GPUs*i):(xSize/num_GPUs*(i+1)), :, :, :])
+    print QuantumState[i].shape
+  for i in xrange(num_GPUs):
+    gpu.append(init.gpuObject(QuantumState, global_vars["devices"][i], i, global_vars))
+  if num_GPUs > 1 :
+    for i in xrange(num_GPUs):
+      for j in xrange(i, num_GPUs - 1):
+        gpu[i].enableBoundaryAccess(gpu[(j + 1)].context)
+        gpu[j + 1].enableBoundaryAccess(gpu[(i)].context)
+
 ############################# Simulation  ###############################################################
 
 def simulate(PRINTING_SUR = True):
@@ -215,7 +237,7 @@ def simulate(PRINTING_SUR = True):
   numParticles = global_vars["particle_number"]
   models.set_model(gpu, num_GPUs, model, dimensions, numParticles) 
   for i in xrange(num_frames):
-    frame_number = frame_size*(i+1)
+    frame_number = global_vars["time_step"] + frame_size*(i+1)
     start_time = time.time()
     models.evolve(gpu, num_GPUs, frame_size)
     save_and_print(frame_number)
@@ -227,13 +249,24 @@ def simulate(PRINTING_SUR = True):
       print "Time remaining is approximately",
       print_time(seconds_remaining)
   # zeroFieldsGPU()
+  if global_vars["save_vort"]:
+    saveVorticityGPU()
   clearFiles()
   clearGPU()
   print("Simulation Complete")
 
 
 ##########################    Visualization   #####################################
-
+def saveVorticityGPU():
+  num_GPUs, directory_name = global_vars["num_GPUs"], global_vars["base_directory_name"]
+  vorticity = drv.from_device(gpu[0].gpuVortField, gpu[0].vortField.shape, dtype = np.int_)
+  for i in xrange(1,global_vars["num_GPUs"]):
+    vortI = gpu[i].pullVort()
+    vorticity = np.concatenate((vorticity,vortI))
+  direct = directory_name + "/Extra/"
+  if not os.path.exists(direct):
+      os.makedirs(direct)
+  np.save(direct+"vorticity.npy", vorticity)
 
 def visualize():
   visualization, vis_kwargs = global_vars["visualization"], global_vars["vis_kwargs"]

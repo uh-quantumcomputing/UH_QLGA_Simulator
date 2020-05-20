@@ -1,0 +1,243 @@
+#todo make default kwargs checkbox active on program boot
+<KwargsOptions>:
+    name: "kwargOptions"
+    expKwargs: expKwargs
+    potentialKwargs: potentialKwargs
+    measurementKwargs: measurementKwargs
+    visualizationKwargs: visualizationKwargs
+
+    FloatLayout:
+        Label:
+            text: "[size=35dp][b]QLGA SIMULATOR[/b][/size]\n\n[size=20dp][b]Custom Keyword Options[/b][/size]"
+            markup: True
+            size_hint: (0.75, 0.5)
+            pos_hint: {'center': (0.5, 0.75)}
+            halign: 'center'
+
+        Label:
+            text: "Default Experiment \n Keywords"
+            halign: 'center'
+            pos_hint: {'center': (0.15, 0.55)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active: root.exp_default_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.25, 0.55)}
+            group: "experiments"
+
+        Label:
+            text: "Define Custom \n Experiment Keywords"
+            halign: 'center'
+            pos_hint: {'center': (0.4, 0.55)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active:root.exp_custom_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.51, 0.55)}
+            group: "experiments"
+
+        TextInput:
+            id: expKwargs
+            multiline: True
+            size_hint: (0.35, 0.1)
+            pos_hint: {'center': (0.75, 0.55)}
+
+        Label:
+            text: "Default External \n Potential"
+            halign: 'center'
+            pos_hint: {'center': (0.15, 0.45)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active: root.potential_default_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.25, 0.45)}
+            group: "externalPotential"
+
+        Label:
+            text: "Define Custom \n External Potential"
+            halign: 'center'
+            pos_hint: {'center': (0.4, 0.45)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active: root.potential_custom_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.51, 0.45)}
+            group: "externalPotential"
+
+        TextInput:
+            id: potentialKwargs
+            multiline: True
+            size_hint: (0.35, 0.1)
+            pos_hint: {'center': (0.75, 0.45)}
+
+        Label:
+            text: "Default \n Measurement"
+            halign: 'center'
+            pos_hint: {'center': (0.15, 0.35)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active: root.measurement_default_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.25, 0.35)}
+            group: "measurement"
+
+        Label:
+            text: "Define Custom \n Measurement Kwargs"
+            halign: 'center'
+            pos_hint: {'center': (0.4, 0.35)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active: root.measurement_custom_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.51, 0.35)}
+            group: "measurement"
+
+        TextInput:
+            id: measurementKwargs
+            multiline: True
+            size_hint: (0.35, 0.1)
+            pos_hint: {'center': (0.75, 0.35)}
+
+        Label:
+            text: "Default \n Visualization"
+            halign: 'center'
+            pos_hint: {'center': (0.15, 0.25)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active: root.visualization_default_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.25, 0.25)}
+            group: "visualization"
+
+        Label:
+            text: "Define Custom \n Visualization Kwargs"
+            halign: 'center'
+            pos_hint: {'center': (0.4, 0.25)}
+            font_size: '15dp'
+
+        CheckBox:
+            canvas.before:
+                Color:
+                    rgb: 30,35,38
+                Ellipse:
+                    pos:self.center_x-11, self.center_y-11
+                    size:[22,22]
+                Color:
+                    rgb: 0,0,0
+                Ellipse:
+                    pos:self.center_x-10, self.center_y-10
+                    size:[20,20]
+            on_active: root.visualization_custom_click(self, self.active)
+            size_hint: (0.15,0.15)
+            pos_hint:{'center': (0.51, 0.25)}
+            group: "visualization"
+
+        TextInput:
+            id: visualizationKwargs
+            multiline: True
+            size_hint: (0.35, 0.1)
+            pos_hint: {'center': (0.75, 0.25)}
+
+        Button:
+            text: '[size=15dp][b]<-[/b][/size] Go Back'
+            markup: True
+            size_hint: (0.15, 0.05)
+            pos_hint: {'center': (0.15, 0.07)}
+            on_release:
+                app.root.current = "physicsmodel"
+                root.manager.transition.direction = "right"
+        Button:
+            text: '[b]Submit & Run[/b]'
+            markup: True
+            halign: 'center'
+            size_hint: (0.15, 0.05)
+            pos_hint: {'center': (0.85, 0.07)}
+            on_press: root.next_button()
+            on_release:
+                app.stop()
+
+

@@ -14,6 +14,7 @@ DTYPE = np.complex
 class gpuObject:
 	def __init__(self, QuantumState, deviceID, deviceNum, global_vars):
 		print "Initializing GPU " + str(deviceNum) + " ..." 
+		self.global_vars = global_vars
 		self.gridX, self.gridY, self.gridZ = global_vars["gridX"], global_vars["gridY"], global_vars["gridZ"]
 		self.blockX, self.blockY, self.blockZ = global_vars["blockX"], global_vars["blockY"], global_vars["blockZ"]
 		self.xSize, self.ySize, self.zSize = self.gridX*self.blockX, self.gridY*self.blockY, self.gridZ*self.blockZ
@@ -21,6 +22,9 @@ class gpuObject:
 		self.deviceNum = deviceNum
 		self.device = drv.Device(deviceID) 
 		self.context = self.device.make_context(drv.ctx_flags.SCHED_YIELD)
+		if global_vars["save_vort"]:
+			self.vortField = np.zeros((self.xSize, self.ySize, self.zSize, 10), dtype = np.int_)
+			self.gpuVortField = drv.to_device(self.vortField)
 		print self.context
 		self.compile_init_source(global_vars)
 		self.compile_model_source(global_vars)
@@ -66,7 +70,7 @@ class gpuObject:
 		exp_kwargs, potential_kwargs, measurement_kwargs = global_vars["exp_kwargs"], global_vars["potential_kwargs"], global_vars["measurement_kwargs"]
 		# Importing files  
 		kinetic = import_module("Code.Initialization.CUDA_physics_models.kinetic." + kinetic_operator +"_" + str(particle_number) + "P")
-		internal_interaction = import_module("Code.Initialization.CUDA_physics_models.internal_interaction." + model + "_" + str(particle_number) + "P")
+		internal_interaction = import_module("Code.Initialization.CUDA_physics_models.internal_interaction." + model)
 		external_interaction = import_module("Code.Initialization.CUDA_physics_models.external_interaction." + potential + "_" + str(particle_number) + "P")
 		measurement_interaction = import_module("Code.Initialization.CUDA_physics_models.measurement_interaction." + measurement + "_" + str(particle_number) + "P")
 		# Writing CUDA file 
@@ -90,6 +94,13 @@ class gpuObject:
 	def initialize(self):
 		self.context.push()
 		initialize_field = self.gpuInitMagic.get_function("initialize")
+		initialize_field(self.QField, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
+		initialize_field(self.QFieldCopy, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
+		self.context.pop()
+
+	def resume(self):
+		self.context.push()
+		initialize_field = self.gpuInitMagic.get_function("resume")
 		initialize_field(self.QField, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
 		initialize_field(self.QFieldCopy, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
 		self.context.pop()
@@ -153,7 +164,10 @@ class gpuObject:
 	def measurement_interaction(self):
 		self.context.push()	
 		measurement = self.gpuModelMagic.get_function("measurement")	
-		measurement(self.QField, self.QFieldCopy, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
+		if self.global_vars["save_vort"]:
+			measurement(self.QField, self.gpuVortField, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
+		else:
+			measurement(self.QField, self.QFieldCopy, self.GPU_Lattice, self.GPU_params, block=(self.blockX,self.blockY,self.blockZ), grid=(self.gridX,self.gridY, self.gridZ))
 		self.context.pop()
 
 	def setCopy(self):
@@ -173,6 +187,13 @@ class gpuObject:
 		QuantumState = drv.from_device(self.QField, self.qShape, DTYPE)
 		self.context.pop()
 		return QuantumState
+
+	def pullVort(self):
+		self.context.push()
+		Vort = drv.from_device(self.QField, (self.xSize, self.ySize, self.zSize, 10), dtype = np.int_)
+		self.context.pop()
+		return Vort
+
 
 	def zeroFields(self):
 		self.context.push()

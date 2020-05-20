@@ -27,6 +27,7 @@ def get_CUDA(vectorSize, numGPUs):
 	  int ySize = lattice[2];
 	  int zSize = lattice[4];
 	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
 	  int vectorSize = lattice[12];
 	  int x = blockIdx.x * blockDim.x + threadIdx.x;
 	  int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -39,10 +40,15 @@ def get_CUDA(vectorSize, numGPUs):
 	  dcmplx AcAc(0.,-0.5); // -i/2
 	  dcmplx AcA(0.5, 0.); // 1/2
 	  dcmplx i(0.,1.);
-	  index_pair iToNum = index_to_number(Qx, x + deviceNum*local_xSize);
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
 	  int alpha = iToNum.index0;
 	  int beta = iToNum.index1;
-	  if ((alpha%2 == 0) && (beta == alpha+1)){
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  if ((alpha_x/2==beta_x/2) && beta_y==alpha_y){
 	    for (n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
 	      QField[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize] = Mul(i,QField2[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize]);
 	    }
@@ -52,7 +58,7 @@ def get_CUDA(vectorSize, numGPUs):
 	      new_qfield = Mul(AcAc,QField2[n+z*vectorSize+y*vectorSize*zSize+x*zSize*ySize*vectorSize]);
 
 	      // DETERMINE WHICH GPU THE INDEX IS ON AND ADD NEW FIELD
-	      new_ind = number_to_index(Qx,alpha+(1-2*(alpha%2)),beta);
+	      new_ind = index_from2d_num(Qx, Ly, alpha_x+(1-2*(alpha_x%2)), beta_x, alpha_y, beta_y);
 	      GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs); // GPU to A*Ac term
 
 	      // CHANGE GLOBAL INDEX TO LOCAL GPU INDEX
@@ -66,7 +72,7 @@ def get_CUDA(vectorSize, numGPUs):
 
 	      
 	      // DETERMINE WHICH GPU THE INDEX IS ON AND ADD NEW FIELD
-	      new_ind = number_to_index(Qx,alpha,beta+(1-2*(beta%2)));
+	      new_ind = index_from2d_num(Qx, Ly, alpha_x, beta_x+(1-2*(beta_x%2)), alpha_y, beta_y);
 	      GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs); // GPU to Ac*A term
 
 	      // CHANGE GLOBAL INDEX TO LOCAL GPU INDEX
@@ -79,7 +85,7 @@ def get_CUDA(vectorSize, numGPUs):
 	      
 
 	      // DETERMINE WHICH GPU THE INDEX IS ON AND ADD NEW FIELD
-	      new_ind = number_to_index(Qx,alpha+(1-2*(alpha%2)),beta+(1-2*(beta%2)));
+	      new_ind = index_from2d_num(Qx, Ly, alpha_x+(1-2*(alpha_x%2)), beta_x+(1-2*(beta_x%2)), alpha_y, beta_y);
 	      GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs); // GPU to Ac*Ac term
 
 	      // CHANGE GLOBAL INDEX TO LOCAL GPU INDEX
@@ -106,26 +112,39 @@ def get_CUDA(vectorSize, numGPUs):
 	  int ySize = lattice[2];
 	  int zSize = lattice[4];
 	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
 	  int vectorSize = lattice[12];
 	  int x = blockIdx.x * blockDim.x + threadIdx.x;
 	  int y = blockIdx.y * blockDim.y + threadIdx.y;
 	  int z = blockIdx.z * blockDim.z + threadIdx.z;
-	  index_pair iToNum = index_to_number(Qx, x + deviceNum*local_xSize);
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
 	  int alpha = iToNum.index0;
 	  int beta = iToNum.index1;
-	  int new_ind = 0;
-	  double sign = signFromStreamEpsilon(1, alpha, beta, Qx, 1);
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1.;
+	  int new_alpha_x = alpha_x;
+	  int new_beta_x = beta_x;
 
-	  // DETERMINE INDEX FIELD WAS STREAMED FROM
-	  if(beta == 1) {
-	    new_ind = number_to_index(Qx, 0, Qx-1);
-	  } else if(alpha == 1) {
-	    new_ind = number_to_index(Qx, beta-2*(beta%2), Qx-1);
-	  } else if((beta == alpha+1) && (beta%2 != 0)) {
-	    new_ind = number_to_index(Qx, beta-2, alpha);
-	  } else {
-	    new_ind = number_to_index(Qx, alpha-2*(alpha%2), beta-2*(beta%2));
+	  // Determine new alpha_x, beta_x
+	  if(beta_x%2==0){
+	  	new_beta_x = (Qx+beta_x-2)%Qx;
 	  }
+	  if(alpha_x%2==0){
+	  	new_alpha_x = (Qx+alpha_x-2)%Qx;
+	  } 
+
+	  int new_ind = index_from2d_num(Qx, Ly, new_alpha_x, new_beta_x, alpha_y, beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (alpha_y*Qx+new_alpha_x>beta_y*Qx+new_beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, new_beta_x, new_alpha_x, beta_y, alpha_y);
+	  }
+
 
 
 	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
@@ -153,28 +172,39 @@ def get_CUDA(vectorSize, numGPUs):
 	  int ySize = lattice[2];
 	  int zSize = lattice[4];
 	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
 	  int vectorSize = lattice[12];
 	  int x = blockIdx.x * blockDim.x + threadIdx.x;
 	  int y = blockIdx.y * blockDim.y + threadIdx.y;
 	  int z = blockIdx.z * blockDim.z + threadIdx.z;
-	  index_pair iToNum = index_to_number(Qx, x + deviceNum*local_xSize);
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
 	  int alpha = iToNum.index0;
 	  int beta = iToNum.index1;
-	  int new_ind = 0;
-	  double sign = signFromStreamEpsilon(1, alpha, beta, Qx, -1);
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1;
+	  int new_alpha_x = alpha_x;
+	  int new_beta_x = beta_x;
 
-	  // DETERMINE INDEX FIELD WAS STREAMED FROM
-	  if(beta == Qx-1) {
-	    if(alpha ==0){
-	      new_ind = number_to_index(Qx, alpha, 1);
-	    } else {
-	      new_ind = number_to_index(Qx, 1, alpha+2*(alpha%2));
-	    }
-	  } else if((beta == alpha+1) && (beta%2 == 0)) {
-	    new_ind = number_to_index(Qx, beta, alpha+2);
-	  } else {
-	    new_ind = number_to_index(Qx, alpha+2*(alpha%2), beta+2*(beta%2));
+	  // Determine new alpha_x, beta_x
+	  if(beta_x%2==0){
+	  	new_beta_x = (Qx+beta_x+2)%Qx;
 	  }
+	  if(alpha_x%2==0){
+	  	new_alpha_x = (Qx+alpha_x+2)%Qx;
+	  }
+
+	  int new_ind = index_from2d_num(Qx, Ly, new_alpha_x, new_beta_x, alpha_y, beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (alpha_y*Qx+new_alpha_x>beta_y*Qx+new_beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, new_beta_x, new_alpha_x, beta_y, alpha_y);
+	  }
+
 
 	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
 	  int GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs);
@@ -202,28 +232,38 @@ def get_CUDA(vectorSize, numGPUs):
 	  int ySize = lattice[2];
 	  int zSize = lattice[4];
 	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
 	  int vectorSize = lattice[12];
 	  int x = blockIdx.x * blockDim.x + threadIdx.x;
 	  int y = blockIdx.y * blockDim.y + threadIdx.y;
 	  int z = blockIdx.z * blockDim.z + threadIdx.z;
-	  index_pair iToNum = index_to_number(Qx, x + deviceNum*local_xSize);
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
 	  int alpha = iToNum.index0;
 	  int beta = iToNum.index1;
-	  int new_ind = 0;
-	  double sign = signFromStreamEpsilon(0, alpha, beta, Qx, 1);
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1;
+	  int new_alpha_x = alpha_x;
+	  int new_beta_x = beta_x;
 
-	  // DETERMINE INDEX FIELD WAS STREAMED FROM
-	  if(alpha == 0) {
-	    if(beta == Qx-1){
-	      new_ind = number_to_index(Qx, Qx-2, Qx-1);
-	    } else {
-	      new_ind = number_to_index(Qx, beta-2*((beta+1)%2), Qx-2);
-	    }
-	  } else if((beta == alpha+1) && (beta%2 == 0)) {
-	    new_ind = number_to_index(Qx, beta-2, alpha);
-	  } else {
-	    new_ind = number_to_index(Qx, alpha-2*((alpha+1)%2), beta-2*((beta+1)%2));
+	  // Determine new alpha_x, beta_x
+	  if(beta_x%2==1){
+	  	new_beta_x = (Qx+beta_x-2)%Qx;
 	  }
+	  if(alpha_x%2==1){
+	  	new_alpha_x = (Qx+alpha_x-2)%Qx;
+	  }
+
+	  int new_ind = index_from2d_num(Qx, Ly, new_alpha_x, new_beta_x, alpha_y, beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (alpha_y*Qx+new_alpha_x>beta_y*Qx+new_beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, new_beta_x, new_alpha_x, beta_y, alpha_y);
+	  } 
 
 
 	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
@@ -251,26 +291,97 @@ def get_CUDA(vectorSize, numGPUs):
 	  int ySize = lattice[2];
 	  int zSize = lattice[4];
 	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
 	  int vectorSize = lattice[12];
 	  int x = blockIdx.x * blockDim.x + threadIdx.x;
 	  int y = blockIdx.y * blockDim.y + threadIdx.y;
 	  int z = blockIdx.z * blockDim.z + threadIdx.z;
-	  index_pair iToNum = index_to_number(Qx, x + deviceNum*local_xSize);
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
 	  int alpha = iToNum.index0;
 	  int beta = iToNum.index1;
-	  int new_ind = 0;
-	  double sign = signFromStreamEpsilon(0, alpha, beta, Qx, -1);
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1;
+	  int new_alpha_x = alpha_x;
+	  int new_beta_x = beta_x;
 
-	  // DETERMINE INDEX FIELD WAS STREAMED FROM
-	  if(alpha == Qx-2) {
-	    new_ind = number_to_index(Qx, 0, Qx-1);
-	  } else if(beta == Qx-2) {
-	    new_ind = number_to_index(Qx, 0, alpha+2*((alpha+1)%2));
-	  } else if((beta == alpha+1) && (beta%2 != 0)) {
-	    new_ind = number_to_index(Qx, beta, alpha+2);
-	  } else {
-	    new_ind = number_to_index(Qx, alpha+2*((alpha+1)%2), beta+2*((beta+1)%2));
+	  // Determine new alpha_x, beta_x
+	  if(beta_x%2==1){
+	  	new_beta_x = (Qx+beta_x+2)%Qx;
 	  }
+	  if(alpha_x%2==1){
+	  	new_alpha_x = (Qx+alpha_x+2)%Qx;
+	  }
+
+	  int new_ind = index_from2d_num(Qx, Ly, new_alpha_x, new_beta_x, alpha_y, beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (alpha_y*Qx+new_alpha_x>beta_y*Qx+new_beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, new_beta_x, new_alpha_x, beta_y, alpha_y);
+	  }
+
+	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
+	  int GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs);
+	  // CHANGE GLOBAL INDEX TO LOCAL GPU INDEX
+	  new_ind = new_ind - GPU_to_reference*local_xSize;
+	  if (deviceNum == GPU_to_reference){
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      QField[n+z*vectorSize+y*vectorSize*zSize+((x)%(xSize))*zSize*ySize*vectorSize] = sign*QField2[n+z*vectorSize+y*vectorSize*zSize+((new_ind)%(xSize))*zSize*ySize*vectorSize];
+	    }
+	  } else {
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      ''' + generate_stream_x_string(numGPUs) + '''
+	    }
+	  }
+	}
+
+	//Stream +l along y for 'left' comp in 2 qbit basis
+	__global__ void streamYPos0(''' + input_string + ''')
+	{
+	  int deviceNum = gpu_params[0];
+	  int numGPUs = gpu_params[2];
+	  int xSize = lattice[0]*numGPUs;
+	  int local_xSize = lattice[0];
+	  int ySize = lattice[2];
+	  int zSize = lattice[4];
+	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
+	  int vectorSize = lattice[12];
+	  int x = blockIdx.x * blockDim.x + threadIdx.x;
+	  int y = blockIdx.y * blockDim.y + threadIdx.y;
+	  int z = blockIdx.z * blockDim.z + threadIdx.z;
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
+	  int alpha = iToNum.index0;
+	  int beta = iToNum.index1;
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1.;
+	  int new_alpha_y = alpha_y;
+	  int new_beta_y = beta_y;
+
+	  // Determine new alpha_y, beta_y
+	  if(beta_x%2==0){
+	  	new_beta_y = (Ly+beta_y+1)%Ly;
+	  }
+	  if(alpha_x%2==0){
+	  	new_alpha_y = (Ly+alpha_y+1)%Ly;
+	  }
+
+	  int new_ind = index_from2d_num(Qx, Ly, alpha_x, beta_x, new_alpha_y, new_beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (new_alpha_y*Qx+alpha_x>new_beta_y*Qx+beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, beta_x, alpha_x, new_beta_y, new_alpha_y);
+	  }
+
 
 
 	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
@@ -287,6 +398,188 @@ def get_CUDA(vectorSize, numGPUs):
 	    }
 	  }
 	}
+
+	//Stream -l along y for 'left' comp in 2 qbit basis
+	__global__ void streamYNeg0(''' + input_string + ''')
+	{
+	  int deviceNum = gpu_params[0];
+	  int numGPUs = gpu_params[2];
+	  int xSize = lattice[0]*numGPUs;
+	  int local_xSize = lattice[0];
+	  int ySize = lattice[2];
+	  int zSize = lattice[4];
+	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
+	  int vectorSize = lattice[12];
+	  int x = blockIdx.x * blockDim.x + threadIdx.x;
+	  int y = blockIdx.y * blockDim.y + threadIdx.y;
+	  int z = blockIdx.z * blockDim.z + threadIdx.z;
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
+	  int alpha = iToNum.index0;
+	  int beta = iToNum.index1;
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1;
+	  int new_alpha_y = alpha_y;
+	  int new_beta_y = beta_y;
+
+	  // Determine new alpha_y, beta_y
+	  if(beta_x%2==0){
+	  	new_beta_y = (Ly+beta_y-1)%Ly;
+	  }
+	  if(alpha_x%2==0){
+	  	new_alpha_y = (Ly+alpha_y-1)%Ly;
+	  }
+	
+		int new_ind = index_from2d_num(Qx, Ly, alpha_x, beta_x, new_alpha_y, new_beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (new_alpha_y*Qx+alpha_x>new_beta_y*Qx+beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, beta_x, alpha_x, new_beta_y, new_alpha_y);
+	  }
+
+
+
+	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
+	  int GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs);
+	  // CHANGE GLOBAL INDEX TO LOCAL GPU INDEX
+	  new_ind = new_ind - GPU_to_reference*local_xSize;
+	  if (deviceNum == GPU_to_reference){
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      QField[n+z*vectorSize+y*vectorSize*zSize+((x)%(xSize))*zSize*ySize*vectorSize] = sign*QField2[n+z*vectorSize+y*vectorSize*zSize+((new_ind)%(xSize))*zSize*ySize*vectorSize];
+	    }
+	  } else {
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      ''' + generate_stream_x_string(numGPUs) + '''
+	    }
+	  }
+	}
+
+	//Stream +l along y for 'right' comp in 2 qbit basis
+	__global__ void streamYPos1(''' + input_string + ''')
+	{
+	  int deviceNum = gpu_params[0];
+	  int numGPUs = gpu_params[2];
+	  int xSize = lattice[0]*numGPUs;
+	  int local_xSize = lattice[0];
+	  int ySize = lattice[2];
+	  int zSize = lattice[4];
+	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
+	  int vectorSize = lattice[12];
+	  int x = blockIdx.x * blockDim.x + threadIdx.x;
+	  int y = blockIdx.y * blockDim.y + threadIdx.y;
+	  int z = blockIdx.z * blockDim.z + threadIdx.z;
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
+	  int alpha = iToNum.index0;
+	  int beta = iToNum.index1;
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1;
+	  int new_alpha_y = alpha_y;
+	  int new_beta_y = beta_y;
+
+	  // Determine new alpha_y, beta_y
+	  if(beta_x%2==1){
+	  	new_beta_y = (Ly+beta_y+1)%Ly;
+	  }
+	  if(alpha_x%2==1){
+	  	new_alpha_y = (Ly+alpha_y+1)%Ly;
+	  }
+	
+		int new_ind = index_from2d_num(Qx, Ly, alpha_x, beta_x, new_alpha_y, new_beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (new_alpha_y*Qx+alpha_x>new_beta_y*Qx+beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, beta_x, alpha_x, new_beta_y, new_alpha_y);
+	  }
+
+
+
+	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
+	  int GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs);
+	  // CHANGE GLOBAL INDEX TO LOCAL GPU INDEX
+	  new_ind = new_ind - GPU_to_reference*local_xSize;
+	  if (deviceNum == GPU_to_reference){
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      QField[n+z*vectorSize+y*vectorSize*zSize+((x)%(xSize))*zSize*ySize*vectorSize] = sign*QField2[n+z*vectorSize+y*vectorSize*zSize+((new_ind)%(xSize))*zSize*ySize*vectorSize];
+	    }
+	  } else {
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      ''' + generate_stream_x_string(numGPUs) + '''
+	    }
+	  }
+	}
+
+	//Stream -l along y for 'right' comp in 2 qbit basis
+	__global__ void streamYNeg1(''' + input_string + ''')
+	{
+	  int deviceNum = gpu_params[0];
+	  int numGPUs = gpu_params[2];
+	  int xSize = lattice[0]*numGPUs;
+	  int local_xSize = lattice[0];
+	  int ySize = lattice[2];
+	  int zSize = lattice[4];
+	  int Qx = lattice[6];
+	  int Ly = lattice[8]/2;
+	  int vectorSize = lattice[12];
+	  int x = blockIdx.x * blockDim.x + threadIdx.x;
+	  int y = blockIdx.y * blockDim.y + threadIdx.y;
+	  int z = blockIdx.z * blockDim.z + threadIdx.z;
+	  index_pair iToNum = index_to_number(Qx*Ly, x + deviceNum*local_xSize);
+	  int alpha = iToNum.index0;
+	  int beta = iToNum.index1;
+	  index_quad alphaBeta2d = num_to2d_num(Qx, alpha, beta);
+	  int alpha_x = alphaBeta2d.index0;
+	  int alpha_y = alphaBeta2d.index1;
+	  int beta_x = alphaBeta2d.index2;
+	  int beta_y = alphaBeta2d.index3;
+	  double sign = 1;
+	  int new_alpha_y = alpha_y;
+	  int new_beta_y = beta_y;
+
+	  // Determine new alpha_y, beta_y
+	  if(beta_x%2==1){
+	  	new_beta_y = (Ly+beta_y-1)%Ly;
+	  }
+	  if(alpha_x%2==1){
+	  	new_alpha_y = (Ly+alpha_y-1)%Ly;
+	  }
+	
+		int new_ind = index_from2d_num(Qx, Ly, alpha_x, beta_x, new_alpha_y, new_beta_y);
+
+	  // Case where alpha and beta switch meanings, to keep alpha<beta
+	  if (new_alpha_y*Qx+alpha_x>new_beta_y*Qx+beta_x){
+	  	sign = -1.;
+	  	new_ind = index_from2d_num(Qx, Ly, beta_x, alpha_x, new_beta_y, new_alpha_y);
+	  }
+
+
+
+	  // DETERMINE WHICH GPU THE INDEX IS ON AND SET NEW FIELD
+	  int GPU_to_reference = index_on_GPU(new_ind, xSize, numGPUs);
+	  // CHANGE GLOBAL INDEX TO LOCAL GPU INDEX
+	  new_ind = new_ind - GPU_to_reference*local_xSize;
+	  if (deviceNum == GPU_to_reference){
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      QField[n+z*vectorSize+y*vectorSize*zSize+((x)%(xSize))*zSize*ySize*vectorSize] = sign*QField2[n+z*vectorSize+y*vectorSize*zSize+((new_ind)%(xSize))*zSize*ySize*vectorSize];
+	    }
+	  } else {
+	    for (int n=0; n<''' + str(int(vectorSize)) + '''; n=n+1){
+	      ''' + generate_stream_x_string(numGPUs) + '''
+	    }
+	  }
+	}
+
+
 
 	
 	'''

@@ -23,6 +23,11 @@ def vis():
 	sim.visualize()
 	sim.animate()
 
+def resume():
+	sim.resume()
+	sim.simulate()
+	sim.visualize()
+	sim.animate()
 
 locals()[run_type]()
 
