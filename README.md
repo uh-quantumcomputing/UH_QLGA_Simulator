@@ -25,7 +25,7 @@ Python Packages: <br/>
 * [Matplotlib](https://matplotlib.org/)
 * [Python-tk](https://wiki.python.org/moin/TkInter)
 * [PyQT](https://wiki.python.org/moin/PyQt)
-* [KIVY](https://kivy.org/)
+* [Kivy](https://kivy.org/)
 
 ## Getting started
 
