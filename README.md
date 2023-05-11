@@ -1,4 +1,4 @@
-# Quantum Lattice Gas Algorithm Simulator
+# Quantum Lattice Gas Algorithm Simulator 
 
 NOTE: This project is still in a work-in-progress state. 
 
@@ -25,6 +25,7 @@ Python Packages: <br/>
 * [Matplotlib](https://matplotlib.org/)
 * [Python-tk](https://wiki.python.org/moin/TkInter)
 * [PyQT](https://wiki.python.org/moin/PyQt)
+* [KIVY](https://kivy.org/)
 
 ## Getting started
 
